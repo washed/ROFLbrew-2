@@ -21,3 +21,9 @@ Pins to assign:
     ✔ STV_PWR_MODE (GPIO PP, pulldown, low, slow) @done(18-11-10 16:59)
     ✔ STV_PWR_INC (GPIO PP, pulldown, low, slow) @done(18-11-10 16:59)
     ✔ STV_PWR_DEC (GPIO PP, pulldown, low, slow) @done(18-11-10 16:59)
+  Mixer:
+    ☐ Add mixer interface
+Kernel:
+  ☐ Add simple scheduler and event interface
+Instrumentation:
+  ☐ Add SYSVIEW instrumentation
