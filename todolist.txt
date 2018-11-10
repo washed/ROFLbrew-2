@@ -1,8 +1,9 @@
 Pins to assign:
   MAX31865:
-    ☐ MAX31865 CS (GPIO PP, Pullup, fast, high)
-    ☐ MAX31865 DR (GPIO EXTI falling, Pullup)
-    ☐ MAX31865 PWR (GPIO PP, slow, low)
+    ✔ MAX31865 CS (GPIO PP, Pullup, fast, high) @done(18-11-10 16:37)
+    ✔ MAX31865 DR (GPIO EXTI falling, Pullup) @done(18-11-10 16:39)
+    ✔ MAX31865 PWR (GPIO PP, slow, low) @done(18-11-10 16:40)
+    ☐ Set correct EXTI Prio for DR pin!
   LCD:
     ☐ LCD_UPDATE (GPIO PP, very fast)
     ☐ LCD_TE (GPIO IN, nopull)
