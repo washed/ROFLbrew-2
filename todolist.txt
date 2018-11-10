@@ -1,0 +1,20 @@
+Pins to assign:
+  MAX31865:
+    ☐ MAX31865 CS (GPIO PP, Pullup, fast, high)
+    ☐ MAX31865 DR (GPIO EXTI falling, Pullup)
+    ☐ MAX31865 PWR (GPIO PP, slow, low)
+  LCD:
+    ☐ LCD_UPDATE (GPIO PP, very fast)
+    ☐ LCD_TE (GPIO IN, nopull)
+    ☐ LCD_nRST (GPIO OD, slow, pullup, high)
+    ☐ LCD_BLIGHT_PWM (PWM Output)
+  Touch:
+    ☐ TP_WAKE (GPIO PP, slow, low)
+    ☐ TP_PEN (GPIO EXTI, rising, nopull)
+    ☐ TP_INT (GPIO EXTI, rising, nopull) one of these is not needed (PEN/INT)
+    ☐ TP_RST (GPIO PP, slow, low) why not open drain?
+  Stove:
+    ☐ STV_PWR (GPIO PP, pulldown, low, slow)
+    ☐ STV_PWR_MODE (GPIO PP, pulldown, low, slow)
+    ☐ STV_PWR_INC (GPIO PP, pulldown, low, slow)
+    ☐ STV_PWR_DEC (GPIO PP, pulldown, low, slow)
