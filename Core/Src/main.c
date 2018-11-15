@@ -120,7 +120,7 @@ int main(void)
   MX_SPI3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-  vFunction();
+
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
