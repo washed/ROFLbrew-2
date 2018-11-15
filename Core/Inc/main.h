@@ -70,14 +70,16 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define LCD_TE_Pin LL_GPIO_PIN_14
-#define LCD_TE_GPIO_Port GPIOB
-#define LCD_UPDATE_Pin LL_GPIO_PIN_15
-#define LCD_UPDATE_GPIO_Port GPIOB
+#define ETH_nINT_Pin LL_GPIO_PIN_14
+#define ETH_nINT_GPIO_Port GPIOB
 #define LCD_BCKLIGHT_PWM_Pin LL_GPIO_PIN_12
 #define LCD_BCKLIGHT_PWM_GPIO_Port GPIOD
 #define LCD_RST_Pin LL_GPIO_PIN_13
 #define LCD_RST_GPIO_Port GPIOD
+#define LCD_TE_Pin LL_GPIO_PIN_6
+#define LCD_TE_GPIO_Port GPIOC
+#define LCD_UPDATE_Pin LL_GPIO_PIN_7
+#define LCD_UPDATE_GPIO_Port GPIOC
 #define MAX31865_CS_Pin LL_GPIO_PIN_15
 #define MAX31865_CS_GPIO_Port GPIOA
 #define MAX31865_SCK_Pin LL_GPIO_PIN_10
