@@ -54,5 +54,8 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# CubeMX generated file
+.mxproject
+
 # Downloaded Datasheets, Reference Manuals, etc
 /doc/components/*
