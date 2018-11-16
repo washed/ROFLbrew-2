@@ -10,6 +10,7 @@
 /* -- CONFIG SECTION                                                             -- */
 /* -------------------------------------------------------------------------------- */
 
+#define LCD_HAL_DMA_INSTANCE (NULL) // &hdma_memtomem_dma2_stream1
 //#define USE_MULTITASKING
 /* Enable color mode */
 //#define USE_COLOR_RGB888   // RGB = 0xFF,0xFF,0xFF
