@@ -13,8 +13,10 @@
 #include "stm32f7xx_hal.h"
 #include "temp_control.h"
 
+#if defined( __ENABLE_SYSVIEW )
 #include "SEGGER_SYSVIEW.h"
 #include "SEGGER_SYSVIEW_Conf.h"
+#endif
 
 volatile uint32_t MAX31865_DEVICES_RTD_DATA[ MAX31865_MAX_DEVICES ];
 int32_t MAX31865_DEVICES_TEMP[ MAX31865_MAX_DEVICES ];
@@ -48,7 +50,9 @@ void handleMAX31865Devices()
   {
     if ( MAX31865_DEVICES_SAMPLE_READY[ device_num ] )
     {
+#if defined( __ENABLE_SYSVIEW )
       SEGGER_SYSVIEW_OnTaskStartExec( SYSVIEW_TASK_MAX31865_RX );
+#endif
 
       MAX31865_DEVICES_TIME_SINCE_LAST_READ[ device_num ] = 0;
       getRTDData_MAX31865( device_num );
@@ -76,7 +80,9 @@ void handleMAX31865Devices()
           break;
       }
 
+#if defined( __ENABLE_SYSVIEW )
       SEGGER_SYSVIEW_OnTaskStopReady( SYSVIEW_TASK_LCD_UPDATE, 0 );
+#endif
     }
   }
 }
@@ -202,7 +208,9 @@ void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
   if ( GPIO_Pin == MAX31865_0_DR_PIN )
   {
     MAX31865_DEVICES_SAMPLE_READY[ 0 ] = 1;
+#if defined( __ENABLE_SYSVIEW )
     SEGGER_SYSVIEW_OnTaskStartReady( SYSVIEW_TASK_MAX31865_RX );
+#endif
   }
   if ( GPIO_Pin == MAX31865_1_DR_PIN )
   {

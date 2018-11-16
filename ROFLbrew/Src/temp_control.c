@@ -15,8 +15,10 @@
 // #include "strutils.h"
 #include "temp_control.h"
 
+#if defined( __ENABLE_SYSVIEW )
 #include "SEGGER_SYSVIEW.h"
 #include "SEGGER_SYSVIEW_Conf.h"
+#endif
 
 TEMPERATURE_CONTROL temp_control0;
 
@@ -153,7 +155,9 @@ void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
 {
   if ( run_temperature_control )
   {
+#if defined( __ENABLE_SYSVIEW )
     SEGGER_SYSVIEW_OnTaskStartExec( SYSVIEW_TASK_TEMP_CONTROL );
+#endif
     switch ( temp_control_handle->current_run_mode )
     {
       case RUN_MODE_RUN:
@@ -257,7 +261,9 @@ void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
     }
     run_temperature_control = 0;
 
+#if defined( __ENABLE_SYSVIEW )
     SEGGER_SYSVIEW_OnTaskStopReady( SYSVIEW_TASK_TEMP_CONTROL, 0 );
+#endif
   }
 }
 

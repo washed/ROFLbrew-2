@@ -10,9 +10,10 @@
 #include "lcd_touch/touch.h"
 #include "lcd_touch/touch_GSL680_fw.h"
 
-
+#if defined( __ENABLE_SYSVIEW )
 #include "SEGGER_SYSVIEW.h"
 #include "SEGGER_SYSVIEW_Conf.h"
+#endif
 
 TouchEvent_TypeDef touchEvent;
 
@@ -29,7 +30,9 @@ uint8_t touch_readTouchData()
   uint8_t touch_data[ 24 ] = { 0 };
   uint8_t reg = 0x80;
 
+#if defined( __ENABLE_SYSVIEW )
   SEGGER_SYSVIEW_OnUserStart( SYSVIEW_EVENT_TOUCH );
+#endif
 
   HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, &reg, 1, 10 );
   HAL_I2C_Master_Receive( TOUCH_I2C_INSTANCE, READ_ADD, touch_data, 24, 10 );
@@ -51,7 +54,10 @@ uint8_t touch_readTouchData()
   touchEvent.x5 = ( *(uint16_t*)&touch_data[ 20 ] ) & 0xFFF;
   touchEvent.y5 = ( *(uint16_t*)&touch_data[ 22 ] ) & 0xFFF;
 
+#if defined( __ENABLE_SYSVIEW )
   SEGGER_SYSVIEW_OnUserStop( SYSVIEW_EVENT_TOUCH );
+#endif
+
   return 0;
 }
 

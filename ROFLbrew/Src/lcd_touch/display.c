@@ -14,8 +14,10 @@
 #include "dma.h"
 #endif
 
+#if defined( __ENABLE_SYSVIEW )
 #include "SEGGER_SYSVIEW.h"
 #include "SEGGER_SYSVIEW_Conf.h"
+#endif
 
 volatile uint32_t update_display = 0;
 
@@ -40,7 +42,9 @@ void handleDisplayUpdate()
 
   if ( update_display )
   {
+#if defined( __ENABLE_SYSVIEW )
     SEGGER_SYSVIEW_OnTaskStartExec( SYSVIEW_TASK_LCD_UPDATE );
+#endif
 
     if ( target_brightness > current_brightness )
       current_brightness += stepsize_brightness;
@@ -60,7 +64,9 @@ void handleDisplayUpdate()
 
     update_display = 0;
 
+#if defined( __ENABLE_SYSVIEW )
     SEGGER_SYSVIEW_OnTaskStopReady( SYSVIEW_TASK_LCD_UPDATE, 0 );
+#endif
   }
 }
 
