@@ -215,7 +215,7 @@ void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
             (float)( ( (float)temp_control_handle->rasten[ temp_control_handle->current_rast ].temperature -
                        (float)temp_control_handle->current_temperature ) /
                      TEMP_INT_FACTOR ) );
-#define OUTPUT_LOG
+// #define OUTPUT_LOG
 #ifdef OUTPUT_LOG
         printTempControlState( temp_control_handle );
 #endif
