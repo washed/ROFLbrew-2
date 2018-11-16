@@ -61,6 +61,11 @@
 
 /* USER CODE BEGIN Includes */
 #include "test_app.h"
+#include "temp_control.h"
+#include "lcd_touch/display.h"
+#include "lcd_touch/touch.h"
+#include "MAX31865.h"
+#include "gui/roflbrew_gui.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -124,6 +129,16 @@ int main(void)
   // Start PWM generation for backlight control
   setDisplayBacklight( 0 );
   HAL_TIM_PWM_Start( &htim4, TIM_CHANNEL_1 );
+
+  initSPIIdleClock();
+
+  initMAX31865();
+  lcd_init();    // LCD initialization
+  touch_init();  // Touch controller init
+  // initStove( &stove0 );
+  initTemperatureControl( &temp_control0 );
+  gui_init();
+  setDisplayBacklightFade( 1000, 100 );
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
