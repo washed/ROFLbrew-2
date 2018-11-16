@@ -5,7 +5,6 @@
  *      Author: washed
  */
 
-#include "stm32f4xx_hal.h"
 #include "tim.h"
 #include "gui/ugui.h"
 #include "gui/roflbrew_gui.h"

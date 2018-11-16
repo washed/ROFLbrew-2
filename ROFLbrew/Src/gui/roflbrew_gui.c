@@ -13,7 +13,7 @@
 #include "gui/ugui.h"
 #include "lcd_touch/display.h"
 #include "stove.h"
-#include "strutils.h"
+// #include "strutils.h"
 #include "temp_control.h"
 
 // TODO: REMOVE

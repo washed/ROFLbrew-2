@@ -10,7 +10,7 @@
 #include <string.h>
 #include "gui/ugui.h"
 #include "lcd_touch/touch.h"
-#include "stm32f4xx_hal.h"
+#include "stm32f7xx_hal.h"
 #include "temp_control.h"
 
 #include "SEGGER_SYSVIEW.h"

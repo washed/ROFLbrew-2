@@ -8,7 +8,7 @@
 #ifndef TEMP_CONTROL_H_
 #define TEMP_CONTROL_H_
 
-#include "stm32f4xx.h"
+#include "stm32f7xx.h"
 #include "arm_math.h"
 
 #define PID_PARAM_KP 0.5      // 2.1			/* Proportional */

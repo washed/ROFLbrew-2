@@ -8,6 +8,9 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
+// ST HAL top include
+#include "stm32f7xx_hal.h""
+
 #ifdef __cplusplus
 extern "C" {
 #endif

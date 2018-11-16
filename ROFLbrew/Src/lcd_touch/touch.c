@@ -5,7 +5,7 @@
  *      Author: washed
  */
 
-#include "stm32f4xx_hal.h"
+#include "stm32f7xx_hal.h"
 #include "i2c.h"
 #include "lcd_touch/touch.h"
 #include "lcd_touch/touch_GSL680_fw.h"

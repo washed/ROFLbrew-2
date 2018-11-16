@@ -1,8 +1,11 @@
 #ifndef __UGUI_CONFIG_H
 #define __UGUI_CONFIG_H
 
+#include "stm32f7xx_hal.h"
 #include "lcd_touch/display.h"
-#include "dma.h"
+// TODO: Handle optional includes better
+// #include "dma.h"
+
 /* -------------------------------------------------------------------------------- */
 /* -- CONFIG SECTION                                                             -- */
 /* -------------------------------------------------------------------------------- */

@@ -8,7 +8,7 @@
 
 #include "stove.h"
 #include "gpio.h"
-#include "stm32f4xx_hal.h"
+#include "stm32f7xx_hal.h"
 
 STOVE stove0;
 Soft_TimerCatalog_TypeDef stove_timers;

@@ -5,14 +5,14 @@
  *      Author: washed
  */
 
-#include "stm32f4xx.h"
+#include "stm32f7xx.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <usart.h>
+// #include <usart.h>
 #include "arm_math.h"
 #include "stove.h"
-#include "strutils.h"
+// #include "strutils.h"
 #include "temp_control.h"
 
 #include "SEGGER_SYSVIEW.h"
