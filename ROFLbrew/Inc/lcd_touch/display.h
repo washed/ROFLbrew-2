@@ -22,7 +22,7 @@ extern "C" {
 #define LCD_MIN_BRIGHTNESS 0
 #define LCD_STEPSIZE_BRIGHTNESS 100
 
-#define USE_LCD_DMA 1
+// #define USE_LCD_DMA 1
 
 #if USE_LCD_DMA
 #define PIXEL_COUNT_PER_DMA 64000
