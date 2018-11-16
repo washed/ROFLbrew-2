@@ -78,7 +78,8 @@ void setDisplayBacklightFade( uint32_t brightness, uint32_t stepsize )
 
 void setDisplayBacklight( uint32_t brightness )
 {
-  if ( ( brightness >= 0 ) && ( brightness <= 1000 ) ) htim12.Instance->CCR1 = brightness;
+  // TODO: Fix timer
+  // if ( ( brightness >= 0 ) && ( brightness <= 1000 ) ) htim12.Instance->CCR1 = brightness;
 }
 
 void pset( uint16_t x, uint16_t y, uint16_t col )
