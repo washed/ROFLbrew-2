@@ -16,7 +16,7 @@ extern "C"
 
 #define TEMP_INT_FACTOR 10000
 
-#define MAX31865_SPI_INSTANCE_PT (NULL) // &hspi2
+#define MAX31865_SPI_INSTANCE_PT &hspi3
 
 #define MAX31865_MAX_DEVICES 4
 
