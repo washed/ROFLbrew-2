@@ -27,3 +27,5 @@ Kernel:
   ☐ Add simple scheduler and event interface
 Instrumentation:
   ☐ Add SYSVIEW instrumentation
+General:
+  ☐ Get and add Cortex-M7 CMSIS math lib
