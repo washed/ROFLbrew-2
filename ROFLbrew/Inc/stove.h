@@ -9,7 +9,6 @@
 #define STOVE_H_
 
 #include "gpio.h"
-#include "soft_timer.h"
 
 #define STOVE_POWERSTEP_COUNT 10
 #define STOVE_STARTING_POWERSTEP 5
@@ -54,7 +53,7 @@ typedef struct STOVE
   uint8_t locked;
   GPIO_TypeDef* gpio_bank[ STOVE_NUM_PINS ];
   uint16_t gpio_pin[ STOVE_NUM_PINS ];
-  Soft_TimerCatalog_TypeDef* timers;
+  // Soft_TimerCatalog_TypeDef* timers;
   uint16_t current_pin;
 
 } STOVE;
