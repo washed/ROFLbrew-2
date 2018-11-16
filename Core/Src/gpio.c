@@ -82,7 +82,7 @@ void MX_GPIO_Init(void)
   LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOD);
 
   /**/
-  LL_GPIO_ResetOutputPin(LCD_RST_GPIO_Port, LCD_RST_Pin);
+  LL_GPIO_ResetOutputPin(LCD_nRST_GPIO_Port, LCD_nRST_Pin);
 
   /**/
   LL_GPIO_ResetOutputPin(LCD_UPDATE_GPIO_Port, LCD_UPDATE_Pin);
@@ -176,12 +176,12 @@ void MX_GPIO_Init(void)
   LL_GPIO_SetPinMode(TOUCH_INT_GPIO_Port, TOUCH_INT_Pin, LL_GPIO_MODE_INPUT);
 
   /**/
-  GPIO_InitStruct.Pin = LCD_RST_Pin;
+  GPIO_InitStruct.Pin = LCD_nRST_Pin;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
   GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
   GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
   GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-  LL_GPIO_Init(LCD_RST_GPIO_Port, &GPIO_InitStruct);
+  LL_GPIO_Init(LCD_nRST_GPIO_Port, &GPIO_InitStruct);
 
   /**/
   GPIO_InitStruct.Pin = LCD_TE_Pin;
