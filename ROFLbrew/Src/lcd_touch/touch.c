@@ -64,16 +64,16 @@ uint8_t touch_readTouchData()
 //GSLX680_Initial
 void touch_init()
 {
-  HAL_GPIO_WritePin( TP_RST_GPIO_Port, TP_RST_Pin, GPIO_PIN_RESET );
+  HAL_GPIO_WritePin( TOUCH_RST_GPIO_Port, TOUCH_RST_Pin, GPIO_PIN_RESET );
   HAL_Delay( 1 );  // TODO: delay(50);
-  HAL_GPIO_WritePin( TP_RST_GPIO_Port, TP_RST_Pin, GPIO_PIN_SET );
+  HAL_GPIO_WritePin( TOUCH_RST_GPIO_Port, TOUCH_RST_Pin, GPIO_PIN_SET );
   HAL_Delay( 1 );  // TODO: delay(50);
 
-  HAL_GPIO_WritePin( TP_WAKE_GPIO_Port, TP_WAKE_Pin, GPIO_PIN_SET );
+  HAL_GPIO_WritePin( TOUCH_WAKE_GPIO_Port, TOUCH_WAKE_Pin, GPIO_PIN_SET );
   HAL_Delay( 1 );  // TODO: delay(50);
-  HAL_GPIO_WritePin( TP_WAKE_GPIO_Port, TP_WAKE_Pin, GPIO_PIN_RESET );
+  HAL_GPIO_WritePin( TOUCH_WAKE_GPIO_Port, TOUCH_WAKE_Pin, GPIO_PIN_RESET );
   HAL_Delay( 1 );  // TODO: delay(50);
-  HAL_GPIO_WritePin( TP_WAKE_GPIO_Port, TP_WAKE_Pin, GPIO_PIN_SET );
+  HAL_GPIO_WritePin( TOUCH_WAKE_GPIO_Port, TOUCH_WAKE_Pin, GPIO_PIN_SET );
   HAL_Delay( 1 );  // TODO: delay(20);
   touch_chipClearRegs();
   touch_chipReset();
