@@ -1,0 +1,49 @@
+{
+  "configurations": [
+    {
+      "name": "Debug",
+      "includePath": [
+        "./*",
+        "./Core/Inc/*",
+        "./Drivers/CMSIS/Device/ST/STM32F7xx/Include/*",
+        "./Drivers/CMSIS/Include/*",
+        "./Drivers/STM32F7xx_HAL_Driver/Inc/*",
+        "./Drivers/STM32F7xx_HAL_Driver/Inc/Legacy/*"
+      ],
+      "defines": [
+        "__weak=__attribute__((__weak__))",
+        "__packed=__attribute__((__packed__))",
+        "__BUILD_DEBUG",
+        "USE_HAL_DRIVER",
+        "USE_FULL_LL_DRIVER",
+        "STM32F746xx"
+      ],
+      "cStandard": "c11",
+      "cppStandard": "c++14",
+      "intelliSenseMode": "gcc-x64"
+    },
+    {
+      "name": "Release",
+      "includePath": [
+        "./*",
+        "./Core/Inc/*",
+        "./Drivers/CMSIS/Device/ST/STM32F7xx/Include/*",
+        "./Drivers/CMSIS/Include/*",
+        "./Drivers/STM32F7xx_HAL_Driver/Inc/*",
+        "./Drivers/STM32F7xx_HAL_Driver/Inc/Legacy/*"
+      ],
+      "defines": [
+        "__weak=__attribute__((__weak__))",
+        "__packed=__attribute__((__packed__))",
+        "__BUILD_RELEASE",
+        "USE_HAL_DRIVER",
+        "USE_FULL_LL_DRIVER",
+        "STM32F746xx"
+      ],
+      "cStandard": "c11",
+      "cppStandard": "c++14",
+      "intelliSenseMode": "gcc-x64"
+    }
+  ],
+  "version": 4
+}
