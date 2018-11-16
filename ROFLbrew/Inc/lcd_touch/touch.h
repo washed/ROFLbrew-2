@@ -8,6 +8,8 @@
 #ifndef TOUCH_H_
 #define TOUCH_H_
 
+#define TOUCH_I2C_INSTANCE (NULL)
+
 #define WRITE_ADD 0x80
 #define READ_ADD 0x81
 

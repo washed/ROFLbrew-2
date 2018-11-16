@@ -31,8 +31,8 @@ uint8_t touch_readTouchData()
 
   SEGGER_SYSVIEW_OnUserStart( SYSVIEW_EVENT_TOUCH );
 
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, &reg, 1, 10 );
-  HAL_I2C_Master_Receive( &hi2c3, READ_ADD, touch_data, 24, 10 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, &reg, 1, 10 );
+  HAL_I2C_Master_Receive( TOUCH_I2C_INSTANCE, READ_ADD, touch_data, 24, 10 );
 
   touchEvent.touch_count = *(uint32_t*)&touch_data[ 0 ];
 
@@ -83,19 +83,19 @@ static void touch_chipClearRegs()
 
   Wrbuf[ 0 ] = 0xe0;
   Wrbuf[ 1 ] = 0x88;
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 2, 1000 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 2, 1000 );
   HAL_Delay( 1 );  // TODO: delay(200);
   Wrbuf[ 0 ] = 0x80;
   Wrbuf[ 1 ] = 0x01;
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 2, 1000 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 2, 1000 );
   HAL_Delay( 1 );  // TODO: delay(50);
   Wrbuf[ 0 ] = 0xe4;
   Wrbuf[ 1 ] = 0x04;
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 2, 1000 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 2, 1000 );
   HAL_Delay( 1 );  // TODO: delay(50);
   Wrbuf[ 0 ] = 0xe0;
   Wrbuf[ 1 ] = 0x00;
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 2, 1000 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 2, 1000 );
   HAL_Delay( 1 );  // TODO: delay(50);
 }
 
@@ -105,18 +105,18 @@ static void touch_chipReset()
   uint8_t Wrbuf[ 5 ];
   Wrbuf[ 0 ] = 0xe0;
   Wrbuf[ 1 ] = 0x88;
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 2, 10 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 2, 10 );
   HAL_Delay( 1 );  // TODO: delay(50);
   Wrbuf[ 0 ] = 0xe4;
   Wrbuf[ 1 ] = 0x04;
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 2, 10 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 2, 10 );
   HAL_Delay( 1 );  // TODO: delay(50);
   Wrbuf[ 0 ] = 0xbc;
   Wrbuf[ 1 ] = 0x00;
   Wrbuf[ 2 ] = 0x00;
   Wrbuf[ 3 ] = 0x00;
   Wrbuf[ 4 ] = 0x00;
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 5, 10 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 5, 10 );
   HAL_Delay( 1 );  // TODO: delay(50);
 }
 
@@ -135,7 +135,7 @@ static void touch_loadFirmware()
     Wrbuf[ 3 ] = (char)( ( GSLX680_FW[ source_line ].val & 0x00ff0000 ) >> 16 );
     Wrbuf[ 4 ] = (char)( ( GSLX680_FW[ source_line ].val & 0xff000000 ) >> 24 );
 
-    HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 5, 10 );
+    HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 5, 10 );
   }
 }
 
@@ -145,5 +145,5 @@ static void touch_chipStartup()
   uint8_t Wrbuf[ 5 ];
   Wrbuf[ 0 ] = 0xe0;
   Wrbuf[ 1 ] = 0x00;
-  HAL_I2C_Master_Transmit( &hi2c3, WRITE_ADD, Wrbuf, 2, 10 );
+  HAL_I2C_Master_Transmit( TOUCH_I2C_INSTANCE, WRITE_ADD, Wrbuf, 2, 10 );
 }
