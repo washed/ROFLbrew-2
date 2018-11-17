@@ -1,6 +1,11 @@
 #MicroXplorer Configuration settings - do not modify
 ETH.IPParameters=MediaInterface
 ETH.MediaInterface=ETH_MEDIA_INTERFACE_RMII
+FMC.AddressSetupTime1=0
+FMC.BusTurnAroundDuration1=0
+FMC.DataSetupTime1=2
+FMC.IPParameters=WriteFifo1,AddressSetupTime1,DataSetupTime1,BusTurnAroundDuration1
+FMC.WriteFifo1=FMC_WRITE_FIFO_DISABLE
 FREERTOS.FootprintOK=true
 FREERTOS.INCLUDE_vTaskDelayUntil=1
 FREERTOS.IPParameters=Tasks01,configUSE_APPLICATION_TASK_TAG,MEMORY_ALLOCATION,FootprintOK,INCLUDE_vTaskDelayUntil
