@@ -374,7 +374,7 @@ void gui_update()
   gui_update_rast_walltime( 0 );
   gui_update_rast_walltime_remaining( 0 );
   gui_update_rast_time( 0 );
-  gui_update_stove_power( 0 );
+  // gui_update_stove_power( 0 );
 }
 
 static void gui_update_is_temperature( uint8_t force_update )

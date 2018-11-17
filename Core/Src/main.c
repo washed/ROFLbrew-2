@@ -117,28 +117,26 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_ETH_Init();
   MX_FMC_Init();
   MX_I2C1_Init();
-  MX_RTC_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_SPI3_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
 
   // Start PWM generation for backlight control
-  setDisplayBacklight( 0 );
-  HAL_TIM_PWM_Start( &htim4, TIM_CHANNEL_1 );
+  // setDisplayBacklight( 0 );
+  // HAL_TIM_PWM_Start( &htim4, TIM_CHANNEL_1 );
 
   initSPIIdleClock();
 
   initMAX31865();
-  lcd_init();    // LCD initialization
-  touch_init();  // Touch controller init
+  // lcd_init();    // LCD initialization
+  // touch_init();  // Touch controller init
   // initStove( &stove0 );
-  initTemperatureControl( &temp_control0 );
-  gui_init();
-  setDisplayBacklightFade( 1000, 100 );
+  // initTemperatureControl( &temp_control0 );
+  // gui_init();
+  // setDisplayBacklightFade( 1000, 100 );
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -153,6 +151,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while ( 1 )
   {
+	    // handleDisplayUpdate();
+	    handleMAX31865Devices();
+	    // checkMAX31865WDG();
+	    // handleTemperatureControl( &temp_control0 );
+	    // handleStove( &stove0 );
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
