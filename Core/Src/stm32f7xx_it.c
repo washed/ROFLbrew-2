@@ -37,7 +37,7 @@
 #include "cmsis_os.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "MAX31865.h"
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -182,7 +182,7 @@ void EXTI2_IRQHandler(void)
   {
     LL_EXTI_ClearFlag_0_31(LL_EXTI_LINE_2);
     /* USER CODE BEGIN LL_EXTI_LINE_2 */
-    
+    MAX31865_DEVICES_SAMPLE_READY[ 0 ] = 1;
     /* USER CODE END LL_EXTI_LINE_2 */
   }
   /* USER CODE BEGIN EXTI2_IRQn 1 */
