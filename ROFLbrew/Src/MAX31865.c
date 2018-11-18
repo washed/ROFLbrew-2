@@ -202,34 +202,6 @@ static inline void deassertCS( uint32_t device_num )
       MAX31865_DEVICES_CS_BANK_PIN[ device_num ][ 1 ];
 }
 
-// DR Pin callback
-void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin )
-{
-  if ( GPIO_Pin == MAX31865_0_DR_PIN )
-  {
-    MAX31865_DEVICES_SAMPLE_READY[ 0 ] = 1;
-#if defined( __ENABLE_SYSVIEW )
-    SEGGER_SYSVIEW_OnTaskStartReady( SYSVIEW_TASK_MAX31865_RX );
-#endif
-  }
-  if ( GPIO_Pin == MAX31865_1_DR_PIN )
-  {
-    MAX31865_DEVICES_SAMPLE_READY[ 1 ] = 1;
-  }
-  if ( GPIO_Pin == MAX31865_2_DR_PIN )
-  {
-    MAX31865_DEVICES_SAMPLE_READY[ 2 ] = 1;
-  }
-  if ( GPIO_Pin == MAX31865_3_DR_PIN )
-  {
-    MAX31865_DEVICES_SAMPLE_READY[ 3 ] = 1;
-  }
-  if ( GPIO_Pin == GPIO_PIN_6 )
-  {
-    touch_readTouchData();
-  }
-}
-
 void tickMAX31865WDGTimer( uint32_t ticks )
 {
   for ( uint32_t device_num = 0; device_num < MAX31865_CON_DEVICES; device_num++ )

@@ -137,19 +137,29 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
+  // Start 25 Hz UI Update timer
+  HAL_TIM_Base_Start_IT( &htim2 );
+
   // Start PWM generation for backlight control
-  // setDisplayBacklight( 0 );
-  // HAL_TIM_PWM_Start( &htim4, TIM_CHANNEL_1 );
+  setDisplayBacklight( 0 );
+  HAL_TIM_PWM_Start( &htim4, TIM_CHANNEL_1 );
 
   initSPIIdleClock();
 
   initMAX31865();
-  // lcd_init();    // LCD initialization
-  // touch_init();  // Touch controller init
+  lcd_init();    // LCD initialization
+  touch_init();  // Touch controller init
   // initStove( &stove0 );
   // initTemperatureControl( &temp_control0 );
-  // gui_init();
-  // setDisplayBacklightFade( 1000, 100 );
+  gui_init();
+  setDisplayBacklightFade( 1000, 100 );
+
+  lcd_fillFrame(0,0,799,479,0xFFFF); // WHITE
+  lcd_fillFrame(0,0,799,479,0x0000); // BLACK
+  lcd_fillFrame(0,0,266,479,0xF800); // RED
+  lcd_fillFrame(267,0,533,479,0x07E0); // GREEN
+  lcd_fillFrame(534,0,799,479,C_BLUE); // BLUE
+
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -164,7 +174,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while ( 1 )
   {
-	    // handleDisplayUpdate();
+	    handleDisplayUpdate();
 	    handleMAX31865Devices();
 	    // checkMAX31865WDG();
 	    // handleTemperatureControl( &temp_control0 );
@@ -302,7 +312,38 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
+  /*
+  static uint32_t temp_timer = 0;
 
+  SEGGER_SYSVIEW_RecordEnterISR();
+
+  if ( htim == &htim14 )
+  {
+    tickMAX31865WDGTimer( 1000 );
+  }
+
+  if ( htim == &htim13 )
+  {
+    update_display = 1;
+    SEGGER_SYSVIEW_OnTaskStartReady( SYSVIEW_TASK_LCD_UPDATE );
+
+    temp_timer++;
+    if ( temp_timer >= 50 )
+    {
+      handle_stove_timers = 1;
+      temp_timer = 0;
+      run_temperature_control = 1;
+      SEGGER_SYSVIEW_OnTaskStartReady( SYSVIEW_TASK_TEMP_CONTROL );
+    }
+  }
+
+  SEGGER_SYSVIEW_RecordExitISR();
+  */
+
+	  if ( htim == &htim2 )
+	  {
+		  update_display = 1;
+	  }
   /* USER CODE END Callback 1 */
 }
 
