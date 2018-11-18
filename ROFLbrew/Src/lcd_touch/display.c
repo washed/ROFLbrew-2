@@ -220,15 +220,15 @@ void lcd_clear( unsigned int i )
 
   lcd_setPosition( 0, 799, 0, 479 );
   // Wait for DMA ready
-  while ( HAL_DMA_GetState( &hdma_memtomem_dma2_stream0 ) != HAL_DMA_STATE_READY )
+  while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
     ;
   lcd_waitForVSync();
   for ( uint32_t j = 0; j < 6; j++ )
   {
     // Start new DMA Transfer
-    HAL_DMA_Start_IT( &hdma_memtomem_dma2_stream0, (uint32_t)&i, (uint32_t)0x60020000, 64000 );
+    HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t)&i, (uint32_t)0x60020000, 64000 );
     // Wait for DMA ready
-    while ( HAL_DMA_GetState( &hdma_memtomem_dma2_stream0 ) != HAL_DMA_STATE_READY )
+    while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
       ;
   }
 #else
@@ -288,11 +288,14 @@ void lcd_showBMP( unsigned char p[] )  //200*120
 
 uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color )
 {
-#if USE_LCD_DMA
+
   uint16_t dx = x2 - x1 + 1;
   uint16_t dy = y2 - y1 + 1;
   uint32_t total_pixel_count = dx * dy;
   uint16_t tx_pixel_count;
+
+  // Invalidate cache for the "color" parameter, because DMA will bypass the cache and may otherwise write invalid data
+  SCB_CleanInvalidateDCache_by_Addr((uint32_t*)&color, sizeof(color));
 
   // Wait for vertical sync
   while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_RESET )
@@ -303,7 +306,8 @@ uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
   // Set write area
   lcd_setPosition( x1, x2, y1, y2 );
 
-  while ( HAL_DMA_GetState( &hdma_memtomem_dma2_stream0 ) != HAL_DMA_STATE_READY )
+#if USE_LCD_DMA
+  while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
     ;
 
   while ( total_pixel_count )
@@ -314,18 +318,23 @@ uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
       tx_pixel_count = total_pixel_count;
 
     // Start new DMA Transfer
-    HAL_DMA_Start_IT( &hdma_memtomem_dma2_stream0, (uint32_t)&color, (uint32_t)0x60020000, tx_pixel_count );
+    while ( HAL_OK != HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t)&color, (uint32_t)0x60020000, tx_pixel_count ));
+
     // Wait for DMA ready
-    while ( HAL_DMA_GetState( &hdma_memtomem_dma2_stream0 ) != HAL_DMA_STATE_READY )
+    while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
       ;
     total_pixel_count -= tx_pixel_count;
   }
-  return 0;
 #else
-  // TODO: Non DMA fill frame function here pls
+  for ( uint32_t current_pixel = 0; current_pixel < total_pixel_count; current_pixel++ )
+  {
+	  *lcd_data = color;
+  }
 #endif
+  return 0;
 }
 
+#if false
 uint8_t lcd_fillArea( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color )
 {
 #if USE_LCD_DMA
@@ -334,16 +343,22 @@ uint8_t lcd_fillArea( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16
   uint32_t total_pixel_count = dx * dy;
   uint16_t tx_pixel_count;
 
+  // Invalidate cache for the "color" parameter, because DMA will bypass the cache and may otherwise write invalid data
+  SCB_CleanInvalidateDCache_by_Addr((uint32_t*)&color, sizeof(color));
+
   // Wait for vertical sync
+#define WAIT_FOR_VSYNC
+#ifdef WAIT_FOR_VSYNC
   while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_RESET )
     ;
   while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_SET )
     ;
+#endif
 
   // Set write area
   lcd_setPosition( x1, x2, y1, y2 );
 
-  while ( HAL_DMA_GetState( &hdma_memtomem_dma2_stream0 ) != HAL_DMA_STATE_READY )
+  while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
     ;
 
   while ( total_pixel_count )
@@ -354,9 +369,9 @@ uint8_t lcd_fillArea( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16
       tx_pixel_count = total_pixel_count;
 
     // Start new DMA Transfer
-    HAL_DMA_Start_IT( &hdma_memtomem_dma2_stream0, (uint32_t)&color, (uint32_t)0x60020000, tx_pixel_count );
+    HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t)&color, (uint32_t)0x60020000, tx_pixel_count );
     // Wait for DMA ready
-    while ( HAL_DMA_GetState( &hdma_memtomem_dma2_stream0 ) != HAL_DMA_STATE_READY )
+    while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
       ;
     total_pixel_count -= tx_pixel_count;
   }
@@ -365,6 +380,7 @@ uint8_t lcd_fillArea( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16
   // TODO: Non DMA fill frame function here pls
 #endif
 }
+#endif
 
 static void lcd_writeCommand( unsigned char c )
 {

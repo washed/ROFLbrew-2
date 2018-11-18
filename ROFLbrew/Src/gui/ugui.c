@@ -6664,14 +6664,18 @@ _UG_PutChar( char chr, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc, const UG_FO
           //for (uint32_t v = 0; v < total_pixels; v++)
           //  *lcd_data = character_array[v];
 
-          while (HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE) != HAL_DMA_STATE_READY)
+          while (HAL_DMA_GetState( UGUI_HAL_DMA_INSTANCE) != HAL_DMA_STATE_READY)
             ;
           //lcd_waitForVSync();
+
+          // Invalidate cache for the "character_array", because DMA will bypass the cache and may otherwise write invalid data
+          SCB_CleanInvalidateDCache_by_Addr((uint32_t*)&character_array[0], sizeof(character_array) );
+
           // Start new DMA Transfer
-          HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t) & character_array[0], (uint32_t) lcd_data,
+          HAL_DMA_Start_IT( UGUI_HAL_DMA_INSTANCE, (uint32_t) & character_array[0], (uint32_t) lcd_data,
                             total_pixels );
           // Wait for DMA ready
-          while (HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY)
+          while (HAL_DMA_GetState( UGUI_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY)
             ;
           /*
            for (j = 0; j < font->char_height; j++)
