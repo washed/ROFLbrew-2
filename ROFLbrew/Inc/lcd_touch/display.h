@@ -10,6 +10,7 @@
 
 // ST HAL top include
 #include "stm32f7xx_hal.h"
+#include "cmsis_os.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,6 +48,7 @@ extern volatile uint32_t update_display;
 extern volatile uint16_t* lcd_data;
 extern volatile uint16_t* lcd_command;
 
+osThreadId createTaskDisplayUpdate();
 void handleDisplayUpdate();
 void setDisplayBacklightFade( uint32_t brightness, uint32_t stepsize );
 void setDisplayBacklight( uint32_t brightness );

@@ -150,7 +150,7 @@ int main(void)
   lcd_init();    // LCD initialization
   touch_init();  // Touch controller init
   // initStove( &stove0 );
-  // initTemperatureControl( &temp_control0 );
+  initTemperatureControl( &temp_control0 );
   gui_init();
   setDisplayBacklightFade( 1000, 100 );
 
@@ -163,10 +163,10 @@ int main(void)
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
-  // MX_FREERTOS_Init();
+  MX_FREERTOS_Init();
 
   /* Start scheduler */
-  // osKernelStart();
+  osKernelStart();
   
   /* We should never get here as control is now taken by the scheduler */
 
@@ -174,8 +174,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while ( 1 )
   {
-	    handleDisplayUpdate();
-	    handleMAX31865Devices();
+	    // handleMAX31865Devices();
 	    // checkMAX31865WDG();
 	    // handleTemperatureControl( &temp_control0 );
 	    // handleStove( &stove0 );

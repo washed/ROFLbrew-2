@@ -10,6 +10,9 @@
 #include "gui/roflbrew_gui.h"
 #include "lcd_touch/touch.h"
 #include "lcd_touch/display.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "cmsis_os.h"
 #if USE_LCD_DMA
 #include "dma.h"
 #endif
@@ -32,6 +35,27 @@ static void lcd_writeDataShort( uint16_t d );
 static uint32_t target_brightness = 1000;
 static uint32_t current_brightness = 0;
 static uint32_t stepsize_brightness = LCD_STEPSIZE_BRIGHTNESS;
+
+#define STACK_SIZE 0x2000
+uint32_t displayUpdateTaskBuffer[ STACK_SIZE ];
+osStaticThreadDef_t displayUpdateControlBlock;
+
+void vTaskDisplayUpdate( void* pvParameters )
+{
+  for ( ;; )
+  {
+	  handleDisplayUpdate();
+  }
+
+  // We should never get here
+  vTaskDelete(NULL);
+}
+
+osThreadId createTaskDisplayUpdate()
+{
+	osThreadStaticDef(displayUpdate, vTaskDisplayUpdate, osPriorityNormal, 0, STACK_SIZE, displayUpdateTaskBuffer, &displayUpdateControlBlock);
+	return osThreadCreate(osThread(displayUpdate), NULL);
+}
 
 void handleDisplayUpdate()
 {
