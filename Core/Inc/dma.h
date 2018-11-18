@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : TIM.h
-  * Description        : This file provides code for the configuration
-  *                      of the TIM instances.
+  * File Name          : dma.h
+  * Description        : This file contains all the function prototypes for
+  *                      the dma.c file
   ******************************************************************************
   * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -47,8 +47,9 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __tim_H
-#define __tim_H
+#ifndef __dma_H
+#define __dma_H
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -57,24 +58,21 @@
 #include "stm32f7xx_hal.h"
 #include "main.h"
 
+/* DMA memory to memory transfer handles -------------------------------------*/
+extern DMA_HandleTypeDef hdma_memtomem_dma2_stream0;
+extern DMA_HandleTypeDef hdma_memtomem_dma2_stream1;
+extern void _Error_Handler(char*, int);
+
 /* USER CODE BEGIN Includes */
 
 /* USER CODE END Includes */
-
-extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-extern void _Error_Handler(char *, int);
+void MX_DMA_Init(void);
 
-void MX_TIM2_Init(void);
-void MX_TIM4_Init(void);
-                        
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                    
 /* USER CODE BEGIN Prototypes */
 
 /* USER CODE END Prototypes */
@@ -82,11 +80,8 @@ void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ tim_H */
 
-/**
-  * @}
-  */
+#endif /* __dma_H */
 
 /**
   * @}
