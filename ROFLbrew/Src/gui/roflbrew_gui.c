@@ -148,7 +148,7 @@ void gui_init_mainwindow()
   UG_ButtonSetBackColor( &window_1, BTN_ID_0, C_LIGHT_SLATE_GRAY );
   UG_ButtonSetForeColor( &window_1, BTN_ID_0, C_LIGHT_GRAY );
   UG_ButtonSetStyle( &window_1, BTN_ID_0, BTN_STYLE_NO_BORDERS );
-  UG_ButtonSetText( &window_1, BTN_ID_0, "ï¿½bersicht" );
+  UG_ButtonSetText( &window_1, BTN_ID_0, "Übersicht" );
 
   /* Configure Button 2 */
   UG_ButtonSetFont( &window_1, BTN_ID_1, &FONT_8X14 );
@@ -214,7 +214,7 @@ void gui_init_mainwindow()
   UG_TextboxSetAlignment( &window_1, TXB_ID_4, ALIGN_CENTER );
   /* Configure Textbox 6 */
   UG_TextboxSetFont( &window_1, TXB_ID_5, &FONT_16X26 );
-  UG_TextboxSetText( &window_1, TXB_ID_5, "0.0ï¿½C/s" );
+  UG_TextboxSetText( &window_1, TXB_ID_5, "0.0 °C/s" );
   UG_TextboxSetForeColor( &window_1, TXB_ID_5, C_GAINSBORO );
   UG_TextboxSetBackColor( &window_1, TXB_ID_5, C_LIGHT_SLATE_GRAY );
   UG_TextboxSetAlignment( &window_1, TXB_ID_5, ALIGN_CENTER );
@@ -278,7 +278,7 @@ void gui_init_mainwindow()
 
   /* Configure Textbox 12 */
   UG_TextboxSetFont( &window_1, TXB_ID_12, &FONT_10X16 );
-  UG_TextboxSetText( &window_1, TXB_ID_12, "Rast-Lï¿½nge" );
+  UG_TextboxSetText( &window_1, TXB_ID_12, "Rast-Länge" );
   UG_TextboxSetForeColor( &window_1, TXB_ID_12, C_SILVER );
   UG_TextboxSetBackColor( &window_1, TXB_ID_12, C_LIGHT_SLATE_GRAY );
   UG_TextboxSetAlignment( &window_1, TXB_ID_12, ALIGN_CENTER );
@@ -385,7 +385,7 @@ static void gui_update_is_temperature( uint8_t force_update )
   if ( ( abs( last_is_temperature - temp_control0.current_temperature ) >= 100 ) || force_update )
   {
     float_temp = (float)temp_control0.current_temperature / TEMP_INT_FACTOR;
-    sprintf( is_temperature_string, "%.2f ï¿½C", float_temp );
+    sprintf( is_temperature_string, "%.2f °C", float_temp );
     UG_TextboxSetText( &window_1, TXB_ID_1, is_temperature_string );
     last_is_temperature = temp_control0.current_temperature;
   }
@@ -400,7 +400,7 @@ static void gui_update_set_temperature( uint8_t force_update )
        force_update )
   {
     float_temp = (float)temp_control0.rasten[ temp_control0.current_rast ].temperature / TEMP_INT_FACTOR;
-    sprintf( set_temperature_string, "%.2f ï¿½C", float_temp );
+    sprintf( set_temperature_string, "%.2f °C", float_temp );
     UG_TextboxSetText( &window_1, TXB_ID_3, set_temperature_string );
     last_set_temperature = temp_control0.rasten[ temp_control0.current_rast ].temperature;
   }
@@ -412,7 +412,7 @@ static void gui_update_rate( uint8_t force_update )
 
   if ( ( fabs( last_rate - temp_control0.temperature_rate ) >= 0.01 ) || force_update )
   {
-    sprintf( temperature_rate_string, "%.2f ï¿½C/s", temp_control0.temperature_rate );
+    sprintf( temperature_rate_string, "%.2f °C/s", temp_control0.temperature_rate );
     UG_TextboxSetText( &window_1, TXB_ID_5, temperature_rate_string );
     last_rate = temp_control0.temperature_rate;
   }
