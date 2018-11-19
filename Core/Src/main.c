@@ -153,12 +153,6 @@ int main( void )
   gui_init();
   setDisplayBacklightFade( 1000, 100 );
 
-  lcd_fillFrame( 0, 0, 799, 479, 0xFFFF );    // WHITE
-  lcd_fillFrame( 0, 0, 799, 479, 0x0000 );    // BLACK
-  lcd_fillFrame( 0, 0, 266, 479, 0xF800 );    // RED
-  lcd_fillFrame( 267, 0, 533, 479, 0x07E0 );  // GREEN
-  lcd_fillFrame( 534, 0, 799, 479, C_BLUE );  // BLUE
-
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
