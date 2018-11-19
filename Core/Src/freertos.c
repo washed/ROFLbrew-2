@@ -147,7 +147,6 @@ void MX_FREERTOS_Init( void )
   displayUpdateTaskHandle = createTaskDisplayUpdate();
   MAX31865TaskHandle = createTaskMAX31865();
   stoveTaskHandle = createTaskStove();
-  // vCreateTaskMAX31865();
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */

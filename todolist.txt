@@ -15,3 +15,4 @@ Instrumentation:
   ? Add SYSVIEW instrumentation
 General:
   ? Add 100 nF to reset line (maybe a pull-up, as well)
+  ? LCD init is still not stable

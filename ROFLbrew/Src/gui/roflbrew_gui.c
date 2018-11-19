@@ -52,6 +52,9 @@ UG_TEXTBOX textbox2_6;
 UG_TEXTBOX textbox2_7;
 UG_TEXTBOX textbox2_8;
 
+UG_TEXTBOX textbox99_1;
+UG_TEXTBOX textbox99_2;
+
 UG_BUTTON button3_1;
 UG_BUTTON button3_2;
 UG_BUTTON button3_3;
@@ -73,6 +76,7 @@ char rast_walltime_string[ 32 ];
 char rast_time_string[ 32 ];
 char rast_walltime_remaing_string[ 32 ];
 char heat_power_string[ 32 ];
+char systick_string[ 32 ];
 
 static void window_1_callback( UG_MESSAGE* msg );
 // static void window_2_callback( UG_MESSAGE* msg );
@@ -84,6 +88,7 @@ static void gui_update_rast_walltime( uint8_t force_update );
 static void gui_update_rast_walltime_remaining( uint8_t force_update );
 static void gui_update_rast_time( uint8_t force_update );
 static void gui_update_stove_power( uint8_t force_update );
+static void gui_update_systick( uint8_t force_update );
 
 void gui_init()
 {
@@ -130,6 +135,11 @@ void gui_init_mainwindow()
   UG_ButtonCreate( &window_1, &button1_6, BTN_ID_5, 0, 5 * h_fract, 100, 6 * h_fract );
 
   w_fract = ( inner_width - 100 ) / 4;
+
+  UG_TextboxCreate( &window_1, &textbox99_1, TXB_ID_49, 100 + 3 * w_fract, 5 * h_fract, 100 + 4 * w_fract,
+                    5.3 * h_fract );
+  UG_TextboxCreate( &window_1, &textbox99_2, TXB_ID_50, 100 + 3 * w_fract, 5.3 * h_fract, 100 + 4 * w_fract,
+                    6 * h_fract );
 
   UG_TextboxCreate( &window_1, &textbox1_1, TXB_ID_0, 100, 0, 100 + w_fract, 0.3 * h_fract );
   UG_TextboxCreate( &window_1, &textbox1_2, TXB_ID_1, 100, 0.3 * h_fract, 100 + w_fract, h_fract );
@@ -231,6 +241,19 @@ void gui_init_mainwindow()
   UG_TextboxSetForeColor( &window_1, TXB_ID_7, C_GAINSBORO );
   UG_TextboxSetBackColor( &window_1, TXB_ID_7, C_LIGHT_SLATE_GRAY );
   UG_TextboxSetAlignment( &window_1, TXB_ID_7, ALIGN_CENTER );
+
+  /* Configure Textbox 49 */
+  UG_TextboxSetFont( &window_1, TXB_ID_49, &FONT_10X16 );
+  UG_TextboxSetText( &window_1, TXB_ID_49, "Systick" );
+  UG_TextboxSetForeColor( &window_1, TXB_ID_49, C_SILVER );
+  UG_TextboxSetBackColor( &window_1, TXB_ID_49, C_LIGHT_SLATE_GRAY );
+  UG_TextboxSetAlignment( &window_1, TXB_ID_49, ALIGN_CENTER );
+  /* Configure Textbox 50 */
+  UG_TextboxSetFont( &window_1, TXB_ID_50, &FONT_10X16 );
+  UG_TextboxSetText( &window_1, TXB_ID_50, "0" );
+  UG_TextboxSetForeColor( &window_1, TXB_ID_50, C_GAINSBORO );
+  UG_TextboxSetBackColor( &window_1, TXB_ID_50, C_LIGHT_SLATE_GRAY );
+  UG_TextboxSetAlignment( &window_1, TXB_ID_50, ALIGN_CENTER );
 
   /********************************************************************************************************************/
   /** These are for the overview-view */
@@ -375,6 +398,7 @@ void gui_update()
   gui_update_rast_walltime_remaining( 0 );
   gui_update_rast_time( 0 );
   gui_update_stove_power( 0 );
+  gui_update_systick( 0 );
 }
 
 static void gui_update_is_temperature( uint8_t force_update )
@@ -478,6 +502,12 @@ static void gui_update_stove_power( uint8_t force_update )
     UG_TextboxSetText( &window_1, TXB_ID_15, heat_power_string );
     last_stove_power = power;
   }
+}
+
+static void gui_update_systick( uint8_t force_update )
+{
+  sprintf( systick_string, "%lu", osKernelSysTick() );
+  UG_TextboxSetText( &window_1, TXB_ID_50, systick_string );
 }
 
 /* Callback function for the main menu */

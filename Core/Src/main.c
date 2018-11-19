@@ -138,7 +138,7 @@ int main( void )
   /* USER CODE BEGIN 2 */
 
   // Start 25 Hz UI Update timer
-  HAL_TIM_Base_Start_IT( &htim2 );
+  // HAL_TIM_Base_Start_IT( &htim2 );
 
   // Start PWM generation for backlight control
   setDisplayBacklight( 0 );
@@ -151,7 +151,7 @@ int main( void )
   touch_init();  // Touch controller init
   initTemperatureControl( &temp_control0 );
   gui_init();
-  setDisplayBacklightFade( 1000, 100 );
+  setDisplayBacklightFade( 1000, 10 );
 
   /* USER CODE END 2 */
 

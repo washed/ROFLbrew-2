@@ -42,19 +42,22 @@ osStaticThreadDef_t displayUpdateControlBlock;
 
 void vTaskDisplayUpdate( void* pvParameters )
 {
+  uint32_t PreviousWakeTime = osKernelSysTick();
   for ( ;; )
   {
-	  handleDisplayUpdate();
+    handleDisplayUpdate();
+    osDelayUntil( &PreviousWakeTime, 20 );
   }
 
   // We should never get here
-  vTaskDelete(NULL);
+  vTaskDelete( NULL );
 }
 
 osThreadId createTaskDisplayUpdate()
 {
-	osThreadStaticDef(displayUpdate, vTaskDisplayUpdate, osPriorityNormal, 0, STACK_SIZE, displayUpdateTaskBuffer, &displayUpdateControlBlock);
-	return osThreadCreate(osThread(displayUpdate), NULL);
+  osThreadStaticDef( displayUpdate, vTaskDisplayUpdate, osPriorityNormal, 0, STACK_SIZE, displayUpdateTaskBuffer,
+                     &displayUpdateControlBlock );
+  return osThreadCreate( osThread( displayUpdate ), NULL );
 }
 
 void handleDisplayUpdate()
@@ -64,7 +67,7 @@ void handleDisplayUpdate()
   else
     UG_TouchUpdate( -1, -1, TOUCH_STATE_RELEASED );
 
-  if ( update_display )
+  // if ( update_display )
   {
 #if defined( __ENABLE_SYSVIEW )
     SEGGER_SYSVIEW_OnTaskStartExec( SYSVIEW_TASK_LCD_UPDATE );
@@ -86,7 +89,7 @@ void handleDisplayUpdate()
     //lcd_waitForVSync();
     UG_Update();
 
-    update_display = 0;
+    // update_display = 0;
 
 #if defined( __ENABLE_SYSVIEW )
     SEGGER_SYSVIEW_OnTaskStopReady( SYSVIEW_TASK_LCD_UPDATE, 0 );
@@ -312,14 +315,13 @@ void lcd_showBMP( unsigned char p[] )  //200*120
 
 uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color )
 {
-
   uint16_t dx = x2 - x1 + 1;
   uint16_t dy = y2 - y1 + 1;
   uint32_t total_pixel_count = dx * dy;
   uint16_t tx_pixel_count;
 
   // Invalidate cache for the "color" parameter, because DMA will bypass the cache and may otherwise write invalid data
-  SCB_CleanInvalidateDCache_by_Addr((uint32_t*)&color, sizeof(color));
+  SCB_CleanInvalidateDCache_by_Addr( (uint32_t*)&color, sizeof( color ) );
 
   // Wait for vertical sync
   while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_RESET )
@@ -342,7 +344,8 @@ uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
       tx_pixel_count = total_pixel_count;
 
     // Start new DMA Transfer
-    while ( HAL_OK != HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t)&color, (uint32_t)0x60020000, tx_pixel_count ));
+    while ( HAL_OK != HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t)&color, (uint32_t)0x60020000, tx_pixel_count ) )
+      ;
 
     // Wait for DMA ready
     while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
@@ -352,7 +355,7 @@ uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
 #else
   for ( uint32_t current_pixel = 0; current_pixel < total_pixel_count; current_pixel++ )
   {
-	  *lcd_data = color;
+    *lcd_data = color;
   }
 #endif
   return 0;
