@@ -149,7 +149,6 @@ int main( void )
   initMAX31865();
   lcd_init();    // LCD initialization
   touch_init();  // Touch controller init
-  // initStove( &stove0 );
   initTemperatureControl( &temp_control0 );
   gui_init();
   setDisplayBacklightFade( 1000, 100 );
@@ -174,10 +173,7 @@ int main( void )
   /* USER CODE BEGIN WHILE */
   while ( 1 )
   {
-    // handleMAX31865Devices();
-    // checkMAX31865WDG();
-    // handleTemperatureControl( &temp_control0 );
-    // handleStove( &stove0 );
+    handleTemperatureControl( &temp_control0 );
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

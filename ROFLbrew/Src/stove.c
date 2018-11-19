@@ -6,226 +6,215 @@
  *      Author: washed
  */
 
+#include "stm32f7xx_hal.h"
 #include "stove.h"
 #include "gpio.h"
-#include "stm32f7xx_hal.h"
+#include "cmsis_os.h"
+
+const uint32_t stove_powersteps[ STOVE_POWERSTEP_COUNT ] = {
+  0, 300, 600, 800, 1000, 1200, 1300, 1500, 1600, 1800, 2000
+};
+
+const uint32_t stove_powersteps[ STOVE_POWERSTEP_COUNT ];
+
+typedef enum STOVE_STATE
+{
+  STOVE_STATE_RESET = 0,
+  STOVE_STATE_READY,
+  STOVE_STATE_BUSY
+} STOVE_STATE;
+
+typedef struct STOVE
+{
+  uint32_t current_powerstep;
+  uint32_t requested_powerstep;
+  STOVE_STATE state;
+  GPIO_TypeDef* gpio_bank[ STOVE_NUM_PINS ];
+  uint16_t gpio_pin[ STOVE_NUM_PINS ];
+} STOVE;
+
+#define STACK_SIZE 0x2000
+
+uint32_t stoveTaskBuffer[ STACK_SIZE ];
+osStaticThreadDef_t stoveControlBlock;
+
+static void handleStove( STOVE* stove_handle );
+static void stovePowerButtonPress( STOVE* stove_handle );
+static void switchStovePowerMode( STOVE* stove_handle );
+static void increaseStovePower( STOVE* stove_handle );
+static void decreaseStovePower( STOVE* stove_handle );
 
 STOVE stove0;
-Soft_TimerCatalog_TypeDef stove_timers;
-Soft_Timer_TypeDef stove_timer_press;
-Soft_Timer_TypeDef stove_timer_nopress;
 
-uint8_t handle_stove_timers = 0;
-
-const uint32_t stove_powersteps[ STOVE_POWERSTEP_COUNT ] = { 300, 600, 800, 1000, 1200, 1300, 1500, 1600, 1800, 2000 };
-
-static void stove_releaseButton( STOVE* stove_handle );
-static void stove_buttonFin( STOVE* stove_handle );
-
-void initStove( STOVE* stove_handle )
+void vTaskStove( void* pvParameters )
 {
-  stove_handle->current_powerstep = STOVE_STARTING_POWERSTEP;
-  stove_handle->requested_powerstep = STOVE_STARTING_POWERSTEP;
-  stove_handle->power_enabled = 0;
-  stove_handle->powermode_enabled = 0;
+  stove0.state = STOVE_STATE_RESET;
 
-  timer_set( &stove_timer_press, STOVE_BUTTON_PRESS_TIME, TIMER_FLAG_NONE, stove_releaseButton, (void*)stove_handle );
-  timer_set( &stove_timer_nopress, STOVE_BUTTON_NOPRESS_TIME, TIMER_FLAG_NONE, stove_buttonFin, (void*)stove_handle );
-  timer_register( &stove_timers, &stove_timer_press, NULL );
-  timer_register( &stove_timers, &stove_timer_nopress, NULL );
-
-  stove_handle->timers = &stove_timers;
-
-  stove_handle->gpio_bank[ STOVE_POWER_PIN_INDEX ] = STOVE_POWER_GPIO_Port;
-  stove_handle->gpio_pin[ STOVE_POWER_PIN_INDEX ] = STOVE_POWER_Pin;
-
-  stove_handle->gpio_bank[ STOVE_POWERMODE_PIN_INDEX ] = STOVE_POWERMODE_GPIO_Port;
-  stove_handle->gpio_pin[ STOVE_POWERMODE_PIN_INDEX ] = STOVE_POWERMODE_Pin;
-
-  stove_handle->gpio_bank[ STOVE_INCPOWER_PIN_INDEX ] = STOVE_INCPOWER_GPIO_Port;
-  stove_handle->gpio_pin[ STOVE_INCPOWER_PIN_INDEX ] = STOVE_INCPOWER_Pin;
-
-  stove_handle->gpio_bank[ STOVE_DECPOWER_PIN_INDEX ] = STOVE_DECPOWER_GPIO_Port;
-  stove_handle->gpio_pin[ STOVE_DECPOWER_PIN_INDEX ] = STOVE_DECPOWER_Pin;
-}
-
-void handleStove( STOVE* stove_handle )
-{
-  if ( handle_stove_timers == 1 )
+  for ( ;; )
   {
-    timer_handleTimerCatalog( &stove_timers );
-    handle_stove_timers = 0;
+    handleStove( &stove0 );
   }
-  setStovePower( stove_handle );
+
+  // We should never get here
+  vTaskDelete( NULL );
 }
 
-static void stove_releaseButton( STOVE* stove_handle )
+osThreadId createTaskStove()
 {
-  HAL_GPIO_WritePin( stove_handle->gpio_bank[ stove_handle->current_pin ],
-                     stove_handle->gpio_pin[ stove_handle->current_pin ], GPIO_PIN_RESET );
-  timer_set( &stove_timer_nopress, STOVE_BUTTON_NOPRESS_TIME, TIMER_FLAG_RUN, stove_buttonFin, (void*)stove_handle );
+  osThreadStaticDef( stove, vTaskStove, osPriorityNormal, 0, STACK_SIZE, stoveTaskBuffer, &stoveControlBlock );
+  return osThreadCreate( osThread( stove ), NULL );
 }
 
-static void stove_buttonFin( STOVE* stove_handle )
+void setStovePower( uint32_t requested_powerstep )
 {
-  switch ( stove_handle->current_pin )
+  // TODO: We should probably use a queue or something for communication to this task!
+  if ( requested_powerstep >= STOVE_POWERSTEP_COUNT )
   {
-    case STOVE_POWER_PIN_INDEX:
-      stove_handle->power_enabled ^= 1;
-      if ( stove_handle->power_enabled == 0 )
+    return;
+  }
+
+  stove0.requested_powerstep = requested_powerstep;
+}
+
+uint32_t getStovePower()
+{
+  return stove_powersteps[ stove0.current_powerstep ];
+}
+
+static void initStove( STOVE* stove_handle )
+{
+  stove_handle->current_powerstep = 0;
+  stove_handle->requested_powerstep = 0;
+
+  stove_handle->gpio_bank[ STOVE_POWER_PIN_INDEX ] = STV_PWR_GPIO_Port;
+  stove_handle->gpio_pin[ STOVE_POWER_PIN_INDEX ] = STV_PWR_Pin;
+
+  stove_handle->gpio_bank[ STOVE_POWERMODE_PIN_INDEX ] = STV_PWR_MODE_GPIO_Port;
+  stove_handle->gpio_pin[ STOVE_POWERMODE_PIN_INDEX ] = STV_PWR_MODE_Pin;
+
+  stove_handle->gpio_bank[ STOVE_INCPOWER_PIN_INDEX ] = STV_PWR_INC_GPIO_Port;
+  stove_handle->gpio_pin[ STOVE_INCPOWER_PIN_INDEX ] = STV_PWR_INC_Pin;
+
+  stove_handle->gpio_bank[ STOVE_DECPOWER_PIN_INDEX ] = STV_PWR_DEC_GPIO_Port;
+  stove_handle->gpio_pin[ STOVE_DECPOWER_PIN_INDEX ] = STV_PWR_DEC_Pin;
+
+  stove_handle->state = STOVE_STATE_READY;
+}
+
+static void handleStove( STOVE* stove_handle )
+{
+  switch ( stove_handle->state )
+  {
+    case STOVE_STATE_RESET:
+      initStove( stove_handle );
+      break;
+
+    default:
+    case STOVE_STATE_BUSY:
+      // Can't do anything in this case
+      osThreadYield();
+      break;
+
+    case STOVE_STATE_READY:
+      if ( stove_handle->requested_powerstep > STOVE_POWERSTEP_COUNT )
       {
-        stove_handle->powermode_enabled = 0;
-        stove_handle->current_powerstep = STOVE_STARTING_POWERSTEP;
+        return;
       }
-      break;
-    case STOVE_POWERMODE_PIN_INDEX:
-      stove_handle->powermode_enabled ^= 1;
-      break;
-    case STOVE_INCPOWER_PIN_INDEX:
-      stove_handle->current_powerstep += 1;
-      if ( stove_handle->current_powerstep >= STOVE_POWERSTEP_COUNT )
-        stove_handle->current_powerstep = STOVE_POWERSTEP_COUNT - 1;
-      break;
-    case STOVE_DECPOWER_PIN_INDEX:
-      stove_handle->current_powerstep -= 1;
-      if ( stove_handle->current_powerstep < 0 ) stove_handle->current_powerstep = 0;
-      break;
-  }
 
-  stove_handle->locked = 0;
-}
-/*
- void handleStoveOPs( STOVE* stove_handle )
- {
- switch ( stove_handle->next_op )
- {
- case STOVE_OP_PIN0_LOW_STOVE_ON:
- HAL_GPIO_WritePin( stove_handle->gpio_bank[STOVE_POWER_PIN_INDEX],
- stove_handle->gpio_pin[STOVE_POWER_PIN_INDEX],
- GPIO_PIN_RESET );
- stove_handle->power_enabled = 1;
- stove_handle->next_op = STOVE_OP_NOP;
- stove_handle->wait_time = STOVE_BUTTON_PERIOD_TIME;
- break;
- case STOVE_OP_PIN0_LOW_STOVE_OFF:
- HAL_GPIO_WritePin( STOVE0_GPIO_Port, STOVE0_Pin, GPIO_PIN_RESET );
- initStove( stove_handle );
- stove_handle->power_enabled = 0;
- stove_handle->next_op = STOVE_OP_NOP;
- stove_handle->wait_time = STOVE_BUTTON_PERIOD_TIME;
- break;
- case STOVE_OP_PIN0_HIGH_STOVE_ON:
- break;
- case STOVE_OP_PIN0_HIGH_STOVE_OFF:
- break;
- case STOVE_OP_PIN1_LOW:
- HAL_GPIO_WritePin( STOVE1_GPIO_Port, STOVE1_Pin, GPIO_PIN_RESET );
- stove_handle->powermode_enabled = 1;
- stove_handle->next_op = STOVE_OP_NOP;
- stove_handle->wait_time = STOVE_BUTTON_PERIOD_TIME;
- break;
- case STOVE_OP_PIN1_HIGH:
- break;
- case STOVE_OP_PIN2_LOW:
- HAL_GPIO_WritePin( STOVE2_GPIO_Port, STOVE2_Pin, GPIO_PIN_RESET );
- stove_handle->current_powerstep--;
- if ( stove_handle->current_powerstep < 0 )
- stove_handle->current_powerstep = 0;
- stove_handle->next_op = STOVE_OP_NOP;
- stove_handle->wait_time = STOVE_BUTTON_PERIOD_TIME;
- break;
- case STOVE_OP_PIN2_HIGH:
- break;
- case STOVE_OP_PIN3_LOW:
- HAL_GPIO_WritePin( STOVE3_GPIO_Port, STOVE3_Pin, GPIO_PIN_RESET );
- stove_handle->current_powerstep++;
- if ( stove_handle->current_powerstep > STOVE_POWERSTEP_COUNT )
- stove_handle->current_powerstep = STOVE_POWERSTEP_COUNT;
- stove_handle->next_op = STOVE_OP_NOP;
- stove_handle->wait_time = STOVE_BUTTON_PERIOD_TIME;
- break;
- default:
- case STOVE_OP_NOP:
- break;
- }
+      if ( stove_handle->current_powerstep == stove_handle->requested_powerstep )
+      {
+        return;
+      }
+      else if ( stove_handle->requested_powerstep > 0 && stove_handle->current_powerstep == 0 )
+      {
+        stovePowerButtonPress( stove_handle );
+        switchStovePowerMode( stove_handle );
+      }
+      else if ( stove_handle->requested_powerstep == 0 && stove_handle->current_powerstep > 0 )
+      {
+        stovePowerButtonPress( stove_handle );
+      }
+      else if ( stove_handle->current_powerstep > stove_handle->requested_powerstep )
+      {
+        decreaseStovePower( stove_handle );
+      }
+      else if ( stove_handle->current_powerstep < stove_handle->requested_powerstep )
+      {
+        increaseStovePower( stove_handle );
+      }
 
- stove_handle->handle_op = 0;
- }
- */
-void switchStoveOn( STOVE* stove_handle )
-{
-  // ON
-  if ( ( !stove_handle->locked ) && ( !stove_handle->power_enabled ) )
-  {
-    stove_handle->locked = 1;
-    stove_handle->current_pin = STOVE_POWER_PIN_INDEX;
-    HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_POWER_PIN_INDEX ],
-                       stove_handle->gpio_pin[ STOVE_POWER_PIN_INDEX ], GPIO_PIN_SET );
-    timer_set( &stove_timer_press, STOVE_BUTTON_PRESS_TIME, TIMER_FLAG_RUN, stove_releaseButton, (void*)stove_handle );
+      osThreadYield();
+      break;
   }
 }
 
-void switchStoveOff( STOVE* stove_handle )
+static void stovePowerButtonPress( STOVE* stove_handle )
 {
-  // OFF
-  if ( ( !stove_handle->locked ) && ( stove_handle->power_enabled ) )
-  {
-    stove_handle->locked = 1;
-    stove_handle->current_pin = STOVE_POWER_PIN_INDEX;
-    HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_POWER_PIN_INDEX ],
-                       stove_handle->gpio_pin[ STOVE_POWER_PIN_INDEX ], GPIO_PIN_SET );
-    timer_set( &stove_timer_press, STOVE_BUTTON_PRESS_TIME, TIMER_FLAG_RUN, stove_releaseButton, (void*)stove_handle );
-  }
+  // ON/OFF
+  stove_handle->state = STOVE_STATE_BUSY;
+
+  HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_POWER_PIN_INDEX ], stove_handle->gpio_pin[ STOVE_POWER_PIN_INDEX ],
+                     GPIO_PIN_SET );
+  osDelay( STOVE_BUTTON_PRESS_TIME );
+  HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_POWER_PIN_INDEX ], stove_handle->gpio_pin[ STOVE_POWER_PIN_INDEX ],
+                     GPIO_PIN_RESET );
+  osDelay( STOVE_BUTTON_NOPRESS_TIME );
+
+  stove_handle->state = STOVE_STATE_READY;
 }
 
-void switchStovePowerMode( STOVE* stove_handle )
+static void switchStovePowerMode( STOVE* stove_handle )
 {
-  // POWER
-  if ( ( !stove_handle->locked ) && ( stove_handle->power_enabled ) && ( !stove_handle->powermode_enabled ) )
-  {
-    stove_handle->locked = 1;
-    stove_handle->current_pin = STOVE_POWERMODE_PIN_INDEX;
-    HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_POWERMODE_PIN_INDEX ],
-                       stove_handle->gpio_pin[ STOVE_POWERMODE_PIN_INDEX ], GPIO_PIN_SET );
-    timer_set( &stove_timer_press, STOVE_BUTTON_PRESS_TIME, TIMER_FLAG_RUN, stove_releaseButton, (void*)stove_handle );
-  }
+  // POWERMODE
+  stove_handle->state = STOVE_STATE_BUSY;
+
+  HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_POWERMODE_PIN_INDEX ],
+                     stove_handle->gpio_pin[ STOVE_POWERMODE_PIN_INDEX ], GPIO_PIN_SET );
+  osDelay( STOVE_BUTTON_PRESS_TIME );
+  HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_POWERMODE_PIN_INDEX ],
+                     stove_handle->gpio_pin[ STOVE_POWERMODE_PIN_INDEX ], GPIO_PIN_RESET );
+  osDelay( STOVE_BUTTON_NOPRESS_TIME );
+
+  stove_handle->current_powerstep = STOVE_STARTING_POWERSTEP;
+  stove_handle->state = STOVE_STATE_READY;
 }
 
-void increaseStovePower( STOVE* stove_handle )
+static void increaseStovePower( STOVE* stove_handle )
 {
-  // Powerup
-  if ( ( !stove_handle->locked ) && ( stove_handle->powermode_enabled ) && ( stove_handle->power_enabled ) )
+  // Increase power
+  stove_handle->state = STOVE_STATE_BUSY;
+
+  if ( ( stove_handle->current_powerstep > 0 ) && ( stove_handle->current_powerstep < ( STOVE_POWERSTEP_COUNT - 1 ) ) )
   {
-    stove_handle->locked = 1;
-    stove_handle->current_pin = STOVE_INCPOWER_PIN_INDEX;
     HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_INCPOWER_PIN_INDEX ],
                        stove_handle->gpio_pin[ STOVE_INCPOWER_PIN_INDEX ], GPIO_PIN_SET );
-    timer_set( &stove_timer_press, STOVE_BUTTON_PRESS_TIME, TIMER_FLAG_RUN, stove_releaseButton, (void*)stove_handle );
+    osDelay( STOVE_BUTTON_PRESS_TIME );
+    HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_INCPOWER_PIN_INDEX ],
+                       stove_handle->gpio_pin[ STOVE_INCPOWER_PIN_INDEX ], GPIO_PIN_RESET );
+    osDelay( STOVE_BUTTON_NOPRESS_TIME );
+
+    stove_handle->current_powerstep++;
   }
+
+  stove_handle->state = STOVE_STATE_READY;
 }
 
-void decreaseStovePower( STOVE* stove_handle )
+static void decreaseStovePower( STOVE* stove_handle )
 {
-  // Powerdown
-  if ( ( !stove_handle->locked ) && ( stove_handle->powermode_enabled ) && ( stove_handle->power_enabled ) )
+  // Decrease power
+  stove_handle->state = STOVE_STATE_BUSY;
+
+  if ( stove_handle->current_powerstep > 1 )
   {
-    stove_handle->locked = 1;
-    stove_handle->current_pin = STOVE_DECPOWER_PIN_INDEX;
     HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_DECPOWER_PIN_INDEX ],
                        stove_handle->gpio_pin[ STOVE_DECPOWER_PIN_INDEX ], GPIO_PIN_SET );
-    timer_set( &stove_timer_press, STOVE_BUTTON_PRESS_TIME, TIMER_FLAG_RUN, stove_releaseButton, (void*)stove_handle );
+    osDelay( STOVE_BUTTON_PRESS_TIME );
+    HAL_GPIO_WritePin( stove_handle->gpio_bank[ STOVE_DECPOWER_PIN_INDEX ],
+                       stove_handle->gpio_pin[ STOVE_DECPOWER_PIN_INDEX ], GPIO_PIN_RESET );
+    osDelay( STOVE_BUTTON_NOPRESS_TIME );
+
+    stove_handle->current_powerstep--;
   }
-}
 
-void setStovePower( STOVE* stove_handle )
-{
-  if ( stove_handle->current_powerstep == stove_handle->requested_powerstep ) return;
-
-  if ( ( stove_handle->requested_powerstep < 0 ) || ( stove_handle->requested_powerstep > STOVE_POWERSTEP_COUNT ) )
-    return;
-
-  if ( stove_handle->current_powerstep > stove_handle->requested_powerstep )
-    decreaseStovePower( stove_handle );
-  else if ( stove_handle->current_powerstep < stove_handle->requested_powerstep )
-    increaseStovePower( stove_handle );
+  stove_handle->state = STOVE_STATE_READY;
 }

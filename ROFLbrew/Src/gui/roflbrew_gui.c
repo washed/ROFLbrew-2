@@ -374,7 +374,7 @@ void gui_update()
   gui_update_rast_walltime( 0 );
   gui_update_rast_walltime_remaining( 0 );
   gui_update_rast_time( 0 );
-  // gui_update_stove_power( 0 );
+  gui_update_stove_power( 0 );
 }
 
 static void gui_update_is_temperature( uint8_t force_update )
@@ -470,23 +470,13 @@ static void gui_update_rast_time( uint8_t force_update )
 static void gui_update_stove_power( uint8_t force_update )
 {
   static uint32_t last_stove_power;
-  static uint8_t last_stove_enabled;
+  uint32_t power = getStovePower();
 
-  if ( ( last_stove_enabled != stove0.power_enabled ) || ( last_stove_power != stove0.current_powerstep ) )
+  if ( last_stove_power != power )
   {
-    uint32_t power;
-    if ( stove0.power_enabled )
-    {
-      power = stove_powersteps[ stove0.current_powerstep ];
-    }
-    else
-    {
-      power = 0;
-    }
     sprintf( heat_power_string, "%lu W", power );
     UG_TextboxSetText( &window_1, TXB_ID_15, heat_power_string );
-    last_stove_power = stove0.current_powerstep;
-    last_stove_enabled = stove0.power_enabled;
+    last_stove_power = power;
   }
 }
 

@@ -226,13 +226,11 @@ void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
 
         if ( temp_control_handle->output > MIN_OUTPUT )
         {
-          switchStoveOn( &stove0 );
-          switchStovePowerMode( &stove0 );
-          stove0.requested_powerstep = ( uint8_t )( lrintf( temp_control_handle->output ) & 0xFF );
+          setStovePower(( uint8_t )( lrintf( temp_control_handle->output ) & 0xFF ));
         }
         else
         {
-          switchStoveOff( &stove0 );
+          setStovePower( 0 );
         }
 
         break;
@@ -256,7 +254,7 @@ void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
         break;
       case RUN_MODE_STOP:
         // Switch off the stove and reset the temp control
-        switchStoveOff( &stove0 );
+    	setStovePower( 0 );
         break;
     }
     run_temperature_control = 0;
