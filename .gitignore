@@ -54,5 +54,11 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
+# CubeMX generated file
+.mxproject
+
+# TrueSTUDIO/Eclipse temp files
+/.settings
+
 # Downloaded Datasheets, Reference Manuals, etc
 /doc/components/*

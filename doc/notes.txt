@@ -1,0 +1,10 @@
+
+Stove-IF:
+  | Color  |  Signal  |
+  | :----- | :------: |
+  | White  |   GND    |
+  | Grey   | PWR_DEC  |
+  | Green  |   PWR    |
+  | Red    | PWR_MODE |
+  | Yellow | PWR_INC  |
+  | Brown  |          |

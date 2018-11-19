@@ -1,29 +1,17 @@
 Pins to assign:
   MAX31865:
-    ✔ MAX31865 CS (GPIO PP, Pullup, fast, high) @done(18-11-10 16:37)
-    ✔ MAX31865 DR (GPIO EXTI falling, Pullup) @done(18-11-10 16:39)
-    ✔ MAX31865 PWR (GPIO PP, slow, low) @done(18-11-10 16:40)
-    ☐ Set correct EXTI Prio for DR pin!
-  ☐ LCD:
-    ✔ LCD_UPDATE (GPIO PP, very fast) @done(18-11-10 16:52)
-    ✔ LCD_TE (GPIO IN, nopull) @done(18-11-10 16:52)
-    ✔ LCD_nRST (GPIO OD, slow, pullup, high) @done(18-11-10 16:52)
-    ✔ LCD_BLIGHT_PWM (PWM Output) @done(18-11-10 16:48)
-    ☐ Check about the functions and necessity of these pins again
+    ? Set correct EXTI Prio for DR pin!
+  LCD:
+    ? Check about the functions and necessity of these pins again
+      LCD_UPDATE was just used for profiling LCD update timing
   Touch:
-    ✔ TP_WAKE (GPIO PP, slow, low) @done(18-11-10 16:56)
-    ✔ TP_PEN (GPIO EXTI, rising, nopull) @done(18-11-10 16:56)
-    ✔ TP_INT (GPIO EXTI, rising, nopull) one of these is not needed (PEN/INT) @done(18-11-10 16:56)
-    ✔ TP_RST (GPIO PP, slow, low) why not open drain? @done(18-11-10 16:53)
-    ☐ Recheck PEN/INT necessity, pullups and opendrain for reset?
+    ? Recheck PEN/INT necessity, pullups and opendrain for reset?
+      Only INT is used
   Stove:
-    ✔ STV_PWR (GPIO PP, pulldown, low, slow) @done(18-11-10 16:59)
-    ✔ STV_PWR_MODE (GPIO PP, pulldown, low, slow) @done(18-11-10 16:59)
-    ✔ STV_PWR_INC (GPIO PP, pulldown, low, slow) @done(18-11-10 16:59)
-    ✔ STV_PWR_DEC (GPIO PP, pulldown, low, slow) @done(18-11-10 16:59)
+    ? Port as a FreeRTOS task
   Mixer:
-    ☐ Add mixer interface
-Kernel:
-  ☐ Add simple scheduler and event interface
+    ? Add mixer interface
 Instrumentation:
-  ☐ Add SYSVIEW instrumentation
+  ? Add SYSVIEW instrumentation
+General:
+  ? Add 100 nF to reset line (maybe a pull-up, as well)
