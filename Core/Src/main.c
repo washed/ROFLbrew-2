@@ -77,9 +77,9 @@
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
-void SystemClock_Config(void);
-static void MPU_Config(void);
-void MX_FREERTOS_Init(void);
+void SystemClock_Config( void );
+static void MPU_Config( void );
+void MX_FREERTOS_Init( void );
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -95,7 +95,7 @@ void MX_FREERTOS_Init(void);
   *
   * @retval None
   */
-int main(void)
+int main( void )
 {
   /* USER CODE BEGIN 1 */
 
@@ -154,11 +154,11 @@ int main(void)
   gui_init();
   setDisplayBacklightFade( 1000, 100 );
 
-  lcd_fillFrame(0,0,799,479,0xFFFF); // WHITE
-  lcd_fillFrame(0,0,799,479,0x0000); // BLACK
-  lcd_fillFrame(0,0,266,479,0xF800); // RED
-  lcd_fillFrame(267,0,533,479,0x07E0); // GREEN
-  lcd_fillFrame(534,0,799,479,C_BLUE); // BLUE
+  lcd_fillFrame( 0, 0, 799, 479, 0xFFFF );    // WHITE
+  lcd_fillFrame( 0, 0, 799, 479, 0x0000 );    // BLACK
+  lcd_fillFrame( 0, 0, 266, 479, 0xF800 );    // RED
+  lcd_fillFrame( 267, 0, 533, 479, 0x07E0 );  // GREEN
+  lcd_fillFrame( 534, 0, 799, 479, C_BLUE );  // BLUE
 
   /* USER CODE END 2 */
 
@@ -167,45 +167,43 @@ int main(void)
 
   /* Start scheduler */
   osKernelStart();
-  
+
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while ( 1 )
   {
-	    // handleMAX31865Devices();
-	    // checkMAX31865WDG();
-	    // handleTemperatureControl( &temp_control0 );
-	    // handleStove( &stove0 );
-  /* USER CODE END WHILE */
+    // handleMAX31865Devices();
+    // checkMAX31865WDG();
+    // handleTemperatureControl( &temp_control0 );
+    // handleStove( &stove0 );
+    /* USER CODE END WHILE */
 
-  /* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-
 }
 
 /**
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(void)
+void SystemClock_Config( void )
 {
-
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
 
-    /**Configure the main internal regulator output voltage 
+  /**Configure the main internal regulator output voltage 
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  __HAL_PWR_VOLTAGESCALING_CONFIG( PWR_REGULATOR_VOLTAGE_SCALE1 );
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+  /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI | RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
@@ -214,52 +212,50 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLN = 432;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 9;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  if ( HAL_RCC_OscConfig( &RCC_OscInitStruct ) != HAL_OK )
   {
-    _Error_Handler(__FILE__, __LINE__);
+    _Error_Handler( __FILE__, __LINE__ );
   }
 
-    /**Activate the Over-Drive mode 
+  /**Activate the Over-Drive mode 
     */
-  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
+  if ( HAL_PWREx_EnableOverDrive() != HAL_OK )
   {
-    _Error_Handler(__FILE__, __LINE__);
+    _Error_Handler( __FILE__, __LINE__ );
   }
 
-    /**Initializes the CPU, AHB and APB busses clocks 
+  /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_7) != HAL_OK)
+  if ( HAL_RCC_ClockConfig( &RCC_ClkInitStruct, FLASH_LATENCY_7 ) != HAL_OK )
   {
-    _Error_Handler(__FILE__, __LINE__);
+    _Error_Handler( __FILE__, __LINE__ );
   }
 
-  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_I2C1
-                              |RCC_PERIPHCLK_CLK48;
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC | RCC_PERIPHCLK_I2C1 | RCC_PERIPHCLK_CLK48;
   PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
   PeriphClkInitStruct.I2c1ClockSelection = RCC_I2C1CLKSOURCE_PCLK1;
   PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48SOURCE_PLL;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+  if ( HAL_RCCEx_PeriphCLKConfig( &PeriphClkInitStruct ) != HAL_OK )
   {
-    _Error_Handler(__FILE__, __LINE__);
+    _Error_Handler( __FILE__, __LINE__ );
   }
 
-    /**Configure the Systick interrupt time 
+  /**Configure the Systick interrupt time 
     */
-  HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
+  HAL_SYSTICK_Config( HAL_RCC_GetHCLKFreq() / 1000 );
 
-    /**Configure the Systick 
+  /**Configure the Systick 
     */
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
+  HAL_SYSTICK_CLKSourceConfig( SYSTICK_CLKSOURCE_HCLK );
 
   /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 15, 0);
+  HAL_NVIC_SetPriority( SysTick_IRQn, 15, 0 );
 }
 
 /* USER CODE BEGIN 4 */
@@ -268,13 +264,13 @@ void SystemClock_Config(void)
 
 /* MPU Configuration */
 
-void MPU_Config(void)
+void MPU_Config( void )
 {
   MPU_Region_InitTypeDef MPU_InitStruct;
 
   /* Disables the MPU */
   HAL_MPU_Disable();
-    /**Initializes and configures the Region and the memory to be protected 
+  /**Initializes and configures the Region and the memory to be protected 
     */
   MPU_InitStruct.Enable = MPU_REGION_ENABLE;
   MPU_InitStruct.Number = MPU_REGION_NUMBER0;
@@ -288,11 +284,10 @@ void MPU_Config(void)
   MPU_InitStruct.IsCacheable = MPU_ACCESS_NOT_CACHEABLE;
   MPU_InitStruct.IsBufferable = MPU_ACCESS_NOT_BUFFERABLE;
 
-  HAL_MPU_ConfigRegion(&MPU_InitStruct);
+  HAL_MPU_ConfigRegion( &MPU_InitStruct );
 
   /* Enables the MPU */
-  HAL_MPU_Enable(MPU_PRIVILEGED_DEFAULT);
-
+  HAL_MPU_Enable( MPU_PRIVILEGED_DEFAULT );
 }
 /**
   * @brief  Period elapsed callback in non blocking mode
@@ -302,12 +297,13 @@ void MPU_Config(void)
   * @param  htim : TIM handle
   * @retval None
   */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+void HAL_TIM_PeriodElapsedCallback( TIM_HandleTypeDef* htim )
 {
   /* USER CODE BEGIN Callback 0 */
 
   /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM1) {
+  if ( htim->Instance == TIM1 )
+  {
     HAL_IncTick();
   }
   /* USER CODE BEGIN Callback 1 */
@@ -339,10 +335,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   SEGGER_SYSVIEW_RecordExitISR();
   */
 
-	  if ( htim == &htim2 )
-	  {
-		  update_display = 1;
-	  }
+  if ( htim == &htim2 )
+  {
+    update_display = 1;
+  }
   /* USER CODE END Callback 1 */
 }
 
@@ -352,7 +348,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   * @param  line: The line in file as a number.
   * @retval None
   */
-void _Error_Handler(char *file, int line)
+void _Error_Handler( char* file, int line )
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
@@ -362,7 +358,7 @@ void _Error_Handler(char *file, int line)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
@@ -370,8 +366,8 @@ void _Error_Handler(char *file, int line)
   * @param  line: assert_param error line source number
   * @retval None
   */
-void assert_failed(uint8_t* file, uint32_t line)
-{ 
+void assert_failed( uint8_t* file, uint32_t line )
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
