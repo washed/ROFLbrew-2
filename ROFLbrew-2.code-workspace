@@ -5,6 +5,11 @@
 		}
 	],
 	"settings": {
-		"files.encoding": "windows1252"
+		"files.encoding": "windows1252",
+		"files.associations": {
+			"stm32f7xx_hal.h": "c",
+			"display.h": "c",
+			"ssd1963.h": "c"
+		}
 	}
 }

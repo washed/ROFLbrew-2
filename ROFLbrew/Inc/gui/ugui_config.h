@@ -3,6 +3,7 @@
 
 #include "stm32f7xx_hal.h"
 #include "lcd_touch/display.h"
+#include "lcd_touch/SSD1963.h"
 // TODO: Handle optional includes better
 #include "dma.h"
 

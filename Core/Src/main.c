@@ -136,22 +136,9 @@ int main( void )
   MX_TIM4_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
-  // Start 25 Hz UI Update timer
-  // HAL_TIM_Base_Start_IT( &htim2 );
-
-  // Start PWM generation for backlight control
-  setDisplayBacklight( 0 );
-  HAL_TIM_PWM_Start( &htim4, TIM_CHANNEL_1 );
-
   initSPIIdleClock();
-
   initMAX31865();
-  lcd_init();    // LCD initialization
-  touch_init();  // Touch controller init
   initTemperatureControl( &temp_control0 );
-  gui_init();
-  setDisplayBacklightFade( 1000, 10 );
 
   /* USER CODE END 2 */
 
@@ -327,7 +314,6 @@ void HAL_TIM_PeriodElapsedCallback( TIM_HandleTypeDef* htim )
 
   if ( htim == &htim2 )
   {
-    update_display = 1;
   }
   /* USER CODE END Callback 1 */
 }

@@ -12,6 +12,7 @@
 #include <string.h>
 #include "gui/ugui.h"
 #include "lcd_touch/display.h"
+#include "lcd_touch/SSD1963.h"
 #include "stove.h"
 // #include "strutils.h"
 #include "temp_control.h"
