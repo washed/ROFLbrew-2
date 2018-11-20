@@ -83,9 +83,9 @@ void MX_FMC_Init(void)
   hsram1.Init.WriteFifo = FMC_WRITE_FIFO_DISABLE;
   hsram1.Init.PageSize = FMC_PAGE_SIZE_NONE;
   /* Timing */
-  Timing.AddressSetupTime = 0;
+  Timing.AddressSetupTime = 10;
   Timing.AddressHoldTime = 15;
-  Timing.DataSetupTime = 2;
+  Timing.DataSetupTime = 10;
   Timing.BusTurnAroundDuration = 0;
   Timing.CLKDivision = 16;
   Timing.DataLatency = 17;
