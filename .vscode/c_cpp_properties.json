@@ -10,8 +10,8 @@
         "./Drivers/STM32F7xx_HAL_Driver/Inc/*",
         "./Drivers/STM32F7xx_HAL_Driver/Inc/Legacy/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/*",
-        "./Middlewares/Third_Party/FreeRTOS/include/*",
-        "./Middlewares/Third_Party/FreeRTOS/CMSIS_RTOS/*",
+        "./Middlewares/Third_Party/FreeRTOS/Source/include/*",
+        "./Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
         "./test_app/Inc/*",
         "./ROFLbrew/Inc/*"
       ],
@@ -37,8 +37,8 @@
         "./Drivers/STM32F7xx_HAL_Driver/Inc/*",
         "./Drivers/STM32F7xx_HAL_Driver/Inc/Legacy/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/*",
-        "./Middlewares/Third_Party/FreeRTOS/include/*",
-        "./Middlewares/Third_Party/FreeRTOS/CMSIS_RTOS/*",
+        "./Middlewares/Third_Party/FreeRTOS/Source/include/*",
+        "./Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
         "./test_app/Inc/*",
         "./ROFLbrew/Inc/*"
       ],
