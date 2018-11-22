@@ -312,9 +312,6 @@ void HAL_TIM_PeriodElapsedCallback( TIM_HandleTypeDef* htim )
   SEGGER_SYSVIEW_RecordExitISR();
   */
 
-  if ( htim == &htim2 )
-  {
-  }
   /* USER CODE END Callback 1 */
 }
 

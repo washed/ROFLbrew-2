@@ -20,6 +20,10 @@ extern "C"
 #define USE_LCD_DMA
 #define LCD_HAL_DMA_INSTANCE &hdma_memtomem_dma2_stream0
 
+#define LCD_MAX_BRIGHTNESS 1000
+#define LCD_MIN_BRIGHTNESS 0
+#define LCD_DEFAULT_FADE_TIME 1000  // ms
+
   typedef struct RgbColor
   {
     unsigned char r;
@@ -34,11 +38,23 @@ extern "C"
     unsigned char v;
   } HsvColor;
 
+  typedef enum fade_curve_t
+  {
+    FADE_CURVE_LINEAR = 0,
+    FADE_CURVE_EXP = 1
+  } fade_curve_t;
+
+  typedef struct fade_def_t
+  {
+    uint32_t brightness;
+    uint32_t fade_time;
+    fade_curve_t curve;
+  } fade_def_t;
+
   osThreadId createTaskDisplayUpdate();
   void handleDisplayUpdate();
 
-  void setDisplayBacklightFade( uint32_t brightness, uint32_t stepsize );
-  void setDisplayBacklight( uint32_t brightness );
+  void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curve_t curve );
   uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color );
 
   RgbColor HsvToRgb( HsvColor hsv );

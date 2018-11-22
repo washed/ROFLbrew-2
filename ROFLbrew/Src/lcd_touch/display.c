@@ -15,6 +15,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "cmsis_os.h"
+#include <math.h>
+#include <stdio.h>
 #ifdef USE_LCD_DMA
 #include "dma.h"
 #endif
@@ -24,20 +26,25 @@
 #include "SEGGER_SYSVIEW_Conf.h"
 #endif
 
-volatile uint32_t update_display = 0;
-
-// Private functions
-static void lcd_writeCommand( uint8_t c );
-static void lcd_writeDataBytes( uint8_t DH, uint8_t DL );
-static void lcd_writeDataShort( uint16_t d );
-
-static uint32_t target_brightness = 1000;
-static uint32_t current_brightness = 0;
-static uint32_t stepsize_brightness = LCD_STEPSIZE_BRIGHTNESS;
+osThreadId createTaskDisplayBacklightUpdate();
 
 #define STACK_SIZE 0x2000
 uint32_t displayUpdateTaskBuffer[ STACK_SIZE ];
 osStaticThreadDef_t displayUpdateControlBlock;
+
+#define displayBacklightUpdateStackSize 0x1000
+#define BACKLIGHT_Q_ITEMS 10
+uint32_t displayBacklightUpdateTaskBuffer[ displayBacklightUpdateStackSize ];
+osStaticThreadDef_t displayBacklightUpdateControlBlock;
+uint8_t backlightQueueBuffer[ BACKLIGHT_Q_ITEMS * sizeof( fade_def_t ) ];
+osStaticMessageQDef_t backlightQueueControlblock;
+osMessageQId backlightQueueHandle;
+#define BACKLIGHT_UPDATE_PERIOD 5
+
+uint32_t current_brightness = LCD_MIN_BRIGHTNESS;
+int32_t stepsize_brightness = 0;
+
+fade_def_t lcd_backlight_fade;
 
 void vTaskDisplayUpdate( void* pvParameters )
 {
@@ -58,14 +65,107 @@ osThreadId createTaskDisplayUpdate()
   touch_init();  // Touch controller init
   gui_init();
 
-  // Start PWM generation for backlight control
-  setDisplayBacklight( 1000 );
-  setDisplayBacklightFade( 1000, 10 );
-  HAL_TIM_PWM_Start( &htim4, TIM_CHANNEL_1 );
-
+  // Create the main display update thread
   osThreadStaticDef( displayUpdate, vTaskDisplayUpdate, osPriorityNormal, 0, STACK_SIZE, displayUpdateTaskBuffer,
                      &displayUpdateControlBlock );
-  return osThreadCreate( osThread( displayUpdate ), NULL );
+  osThreadId id = osThreadCreate( osThread( displayUpdate ), NULL );
+
+  // Create the display backlight update thread
+  createTaskDisplayBacklightUpdate();
+
+  return id;
+}
+
+static inline void update_backlight_step()
+{
+  float current_brightness_f = (float)current_brightness;
+  float target_brightness_f = (float)lcd_backlight_fade.brightness;
+  float fade_time_f = lcd_backlight_fade.fade_time;
+  float period_f = (float)BACKLIGHT_UPDATE_PERIOD;
+
+  switch ( lcd_backlight_fade.curve )
+  {
+    case FADE_CURVE_LINEAR:
+      if ( stepsize_brightness == 0 )
+      {
+        stepsize_brightness =
+            floorl( ( target_brightness_f - current_brightness_f ) / ( fade_time_f / period_f ) + 0.5f );
+      }
+
+      if ( lcd_backlight_fade.brightness == current_brightness )
+      {
+        stepsize_brightness = 0;
+      }
+      break;
+
+    case FADE_CURVE_EXP:
+      if ( target_brightness_f != current_brightness_f )
+      {
+        stepsize_brightness = floorf( ( ( target_brightness_f - current_brightness_f ) / 50.0f ) + 0.5f ) + 1;
+      }
+      else
+      {
+        stepsize_brightness = 0;
+      }
+      break;
+
+    default:
+      stepsize_brightness = 0;
+      break;
+  }
+}
+
+void vTaskDisplayBacklightUpdate( void* pvParameters )
+{
+  lcd_backlight_fade.brightness = LCD_MAX_BRIGHTNESS;
+  lcd_backlight_fade.fade_time = LCD_DEFAULT_FADE_TIME;
+  lcd_backlight_fade.curve = FADE_CURVE_EXP;
+  htim4.Instance->CCR1 = current_brightness;
+
+  // Start PWM generation for backlight control
+  HAL_TIM_PWM_Start( &htim4, TIM_CHANNEL_1 );
+
+  uint32_t PreviousWakeTime = osKernelSysTick();
+  for ( ;; )
+  {
+    if ( pdPASS == xQueueReceive( backlightQueueHandle, &lcd_backlight_fade, 0 ) )
+    {
+      stepsize_brightness = 0;
+    }
+
+    update_backlight_step();
+
+    current_brightness += stepsize_brightness;
+
+    if ( current_brightness > LCD_MAX_BRIGHTNESS )
+    {
+      current_brightness = LCD_MAX_BRIGHTNESS;
+    }
+    else if ( current_brightness < LCD_MIN_BRIGHTNESS )
+    {
+      current_brightness = LCD_MIN_BRIGHTNESS;
+    }
+
+    htim4.Instance->CCR1 = current_brightness;
+
+    osDelayUntil( &PreviousWakeTime, BACKLIGHT_UPDATE_PERIOD );
+  }
+
+  // We should never get here
+  vTaskDelete( NULL );
+}
+
+osThreadId createTaskDisplayBacklightUpdate()
+{
+  osThreadStaticDef( displayBacklightUpdate, vTaskDisplayBacklightUpdate, osPriorityNormal, 0,
+                     displayBacklightUpdateStackSize, displayBacklightUpdateTaskBuffer,
+                     &displayBacklightUpdateControlBlock );
+  osThreadId id = osThreadCreate( osThread( displayBacklightUpdate ), NULL );
+
+  osMessageQStaticDef( backlightQ, BACKLIGHT_Q_ITEMS, fade_def_t, backlightQueueBuffer, &backlightQueueControlblock );
+  backlightQueueHandle = osMessageCreate( &os_messageQ_def_backlightQ, NULL );
+
+  return id;
 }
 
 void handleDisplayUpdate()
@@ -80,48 +180,19 @@ void handleDisplayUpdate()
   UG_Update();
 }
 
-void handleDisplayBacklight()
+void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curve_t curve )
 {
-  if ( target_brightness == current_brightness )
+  if ( ( brightness >= LCD_MIN_BRIGHTNESS ) && ( brightness <= LCD_MAX_BRIGHTNESS ) )
   {
-    osThreadSuspend( NULL );
-  }
-  else if ( target_brightness > current_brightness )
-  {
-    current_brightness += stepsize_brightness;
-  }
-  else if ( target_brightness < current_brightness )
-  {
-    current_brightness -= stepsize_brightness;
-  }
+    fade_def_t fade_def;
 
-  if ( current_brightness > LCD_MAX_BRIGHTNESS )
-  {
-    current_brightness = LCD_MAX_BRIGHTNESS;
+    fade_def.brightness = brightness;
+    fade_def.fade_time = fade_time;
+    fade_def.curve = 0;
+
+    // Make it possible to call this from an interrupt context
+    xQueueSend( backlightQueueHandle, &fade_def, 0 );
   }
-  else if ( current_brightness < LCD_MIN_BRIGHTNESS )
-  {
-    current_brightness = LCD_MIN_BRIGHTNESS;
-  }
-
-  setDisplayBacklight( current_brightness );
-}
-
-void setDisplayBacklightFade( uint32_t brightness, uint32_t stepsize )
-{
-  if ( ( brightness >= 0 ) && ( brightness <= 1000 ) ) target_brightness = brightness;
-  stepsize_brightness = stepsize;
-
-  if ( target_brightness != current_brightness )
-  {
-    osThreadResume( NULL );
-  }
-}
-
-void setDisplayBacklight( uint32_t brightness )
-{
-  current_brightness = brightness;
-  if ( ( brightness >= 0 ) && ( brightness <= 1000 ) ) htim4.Instance->CCR1 = brightness;
 }
 
 uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color )
