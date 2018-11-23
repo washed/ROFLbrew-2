@@ -51,6 +51,9 @@ osStaticThreadDef_t MAX31865ControlBlock;
 
 void vTaskMAX31865( void* pvParameters )
 {
+  initSPIIdleClock();
+  initMAX31865();
+
   for ( ;; )
   {
     handleMAX31865Devices();

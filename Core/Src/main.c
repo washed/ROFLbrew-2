@@ -135,8 +135,7 @@ int main( void )
   MX_TIM4_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  initSPIIdleClock();
-  initMAX31865();
+
   initTemperatureControl( &temp_control0 );
 
   /* USER CODE END 2 */
