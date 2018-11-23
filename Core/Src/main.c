@@ -61,7 +61,6 @@
 #include "fmc.h"
 
 /* USER CODE BEGIN Includes */
-#include "test_app.h"
 #include "temp_control.h"
 #include "lcd_touch/display.h"
 #include "lcd_touch/touch.h"

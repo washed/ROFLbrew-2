@@ -12,7 +12,6 @@
         "./Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/include/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
-        "./test_app/Inc/*",
         "./ROFLbrew/Inc/*"
       ],
       "defines": [
@@ -39,7 +38,6 @@
         "./Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/include/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
-        "./test_app/Inc/*",
         "./ROFLbrew/Inc/*"
       ],
       "defines": [
