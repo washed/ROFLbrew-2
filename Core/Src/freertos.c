@@ -81,6 +81,7 @@
 osThreadId displayUpdateTaskHandle;
 osThreadId MAX31865TaskHandle;
 osThreadId stoveTaskHandle;
+osThreadId tempControlTaskHandle;
 /* USER CODE END Variables */
 osThreadId defaultTaskHandle;
 uint32_t defaultTaskBuffer[ 128 ];
@@ -147,6 +148,7 @@ void MX_FREERTOS_Init( void )
   displayUpdateTaskHandle = createTaskDisplayUpdate();
   MAX31865TaskHandle = createTaskMAX31865();
   stoveTaskHandle = createTaskStove();
+  tempControlTaskHandle = createTaskTempControl();
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_QUEUES */

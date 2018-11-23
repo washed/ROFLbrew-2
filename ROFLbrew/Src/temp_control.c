@@ -9,10 +9,8 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
-// #include <usart.h>
 #include "arm_math.h"
 #include "stove.h"
-// #include "strutils.h"
 #include "temp_control.h"
 
 #if defined( __ENABLE_SYSVIEW )
@@ -20,11 +18,38 @@
 #include "SEGGER_SYSVIEW_Conf.h"
 #endif
 
+#define tempControlPeriod 1000UL
+#define tempControlStackSize 0x2000
+
+uint32_t tempControlTaskBuffer[ tempControlStackSize ];
+osStaticThreadDef_t tempControlControlBlock;
+
 TEMPERATURE_CONTROL temp_control0;
 
-volatile uint8_t run_temperature_control = 0;
 char uart_log_string[ 128 ];
 char uart_log_temp_string[ 64 ];
+
+void vTaskTempControl( void* pvParameters )
+{
+  initTemperatureControl( &temp_control0 );
+
+  uint32_t PreviousWakeTime = osKernelSysTick();
+  for ( ;; )
+  {
+    handleTemperatureControl( &temp_control0 );
+    osDelayUntil( &PreviousWakeTime, tempControlPeriod );
+  }
+
+  // We should never get here
+  vTaskDelete( NULL );
+}
+
+osThreadId createTaskTempControl()
+{
+  osThreadStaticDef( tempControl, vTaskTempControl, osPriorityNormal, 0, tempControlStackSize, tempControlTaskBuffer,
+                     &tempControlControlBlock );
+  return osThreadCreate( osThread( tempControl ), NULL );
+}
 
 void initTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
 {
@@ -153,115 +178,104 @@ void setGainStage( TEMPERATURE_CONTROL* temp_control_handle )
 
 void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
 {
-  if ( run_temperature_control )
+  switch ( temp_control_handle->current_run_mode )
   {
-#if defined( __ENABLE_SYSVIEW )
-    SEGGER_SYSVIEW_OnTaskStartExec( SYSVIEW_TASK_TEMP_CONTROL );
-#endif
-    switch ( temp_control_handle->current_run_mode )
-    {
-      case RUN_MODE_RUN:
+    case RUN_MODE_RUN:
 
-        temp_control_handle->wall_time++;
-        temp_control_handle->rasten[ temp_control_handle->current_rast ].time_running++;
+      temp_control_handle->wall_time++;
+      temp_control_handle->rasten[ temp_control_handle->current_rast ].time_running++;
 
-        switch ( temp_control_handle->rasten[ temp_control_handle->current_rast ].type )
-        {
-          case RAST_TYPE_HEAT:
-            if ( temp_control_handle->current_gain_stage == 1 )
+      switch ( temp_control_handle->rasten[ temp_control_handle->current_rast ].type )
+      {
+        case RAST_TYPE_HEAT:
+          if ( temp_control_handle->current_gain_stage == 1 )
+          {
+            temp_control_handle->current_run_mode = RUN_MODE_NEXT;
+            break;
+          }
+          if ( temp_control_handle->rasten[ temp_control_handle->current_rast ].time != 0 )
+          {
+            if ( temp_control_handle->rasten[ temp_control_handle->current_rast ].time -
+                     temp_control_handle->rasten[ temp_control_handle->current_rast ].time_running <=
+                 0 )
             {
               temp_control_handle->current_run_mode = RUN_MODE_NEXT;
               break;
             }
-            if ( temp_control_handle->rasten[ temp_control_handle->current_rast ].time != 0 )
+          }
+          break;
+        case RAST_TYPE_HOLD:
+          if ( temp_control_handle->rasten[ temp_control_handle->current_rast ].time != 0 )
+          {
+            if ( temp_control_handle->rasten[ temp_control_handle->current_rast ].time -
+                     temp_control_handle->rasten[ temp_control_handle->current_rast ].time_running <=
+                 0 )
             {
-              if ( temp_control_handle->rasten[ temp_control_handle->current_rast ].time -
-                       temp_control_handle->rasten[ temp_control_handle->current_rast ].time_running <=
-                   0 )
-              {
-                temp_control_handle->current_run_mode = RUN_MODE_NEXT;
-                break;
-              }
+              temp_control_handle->current_run_mode = RUN_MODE_NEXT;
+              break;
             }
-            break;
-          case RAST_TYPE_HOLD:
-            if ( temp_control_handle->rasten[ temp_control_handle->current_rast ].time != 0 )
-            {
-              if ( temp_control_handle->rasten[ temp_control_handle->current_rast ].time -
-                       temp_control_handle->rasten[ temp_control_handle->current_rast ].time_running <=
-                   0 )
-              {
-                temp_control_handle->current_run_mode = RUN_MODE_NEXT;
-                break;
-              }
-            }
-            break;
-          case RAST_TYPE_IDLE:
-            break;
-          case RAST_TYPE_PAUSE:
-            break;
-          case RAST_TYPE_UNUSED:
-            // We should never get here with an unused rast...
-            temp_control_handle->current_run_mode = RUN_MODE_STOP;
-            break;
-        }
+          }
+          break;
+        case RAST_TYPE_IDLE:
+          break;
+        case RAST_TYPE_PAUSE:
+          break;
+        case RAST_TYPE_UNUSED:
+          // We should never get here with an unused rast...
+          temp_control_handle->current_run_mode = RUN_MODE_STOP;
+          break;
+      }
 
-        // Set current gain stage:
-        setGainStage( temp_control_handle );
+      // Set current gain stage:
+      setGainStage( temp_control_handle );
 
-        // Calculate controller output according to current temperature error
-        temp_control_handle->output = arm_pid_f32(
-            &temp_control_handle->pid,
-            (float)( ( (float)temp_control_handle->rasten[ temp_control_handle->current_rast ].temperature -
-                       (float)temp_control_handle->current_temperature ) /
-                     TEMP_INT_FACTOR ) );
+      // Calculate controller output according to current temperature error
+      temp_control_handle->output =
+          arm_pid_f32( &temp_control_handle->pid,
+                       (float)( ( (float)temp_control_handle->rasten[ temp_control_handle->current_rast ].temperature -
+                                  (float)temp_control_handle->current_temperature ) /
+                                TEMP_INT_FACTOR ) );
 // #define OUTPUT_LOG
 #ifdef OUTPUT_LOG
-        printTempControlState( temp_control_handle );
+      printTempControlState( temp_control_handle );
 #endif
-        // Limit the output to acceptable values
-        if ( temp_control_handle->output < ( MIN_OUTPUT ) ) temp_control_handle->output = MIN_OUTPUT;
+      // Limit the output to acceptable values
+      if ( temp_control_handle->output < ( MIN_OUTPUT ) ) temp_control_handle->output = MIN_OUTPUT;
 
-        if ( temp_control_handle->output > MAX_OUTPUT ) temp_control_handle->output = MAX_OUTPUT;
+      if ( temp_control_handle->output > MAX_OUTPUT ) temp_control_handle->output = MAX_OUTPUT;
 
-        if ( temp_control_handle->output > MIN_OUTPUT )
-        {
-          setStovePower(( uint8_t )( lrintf( temp_control_handle->output ) & 0xFF ));
-        }
-        else
-        {
-          setStovePower( 0 );
-        }
+      if ( temp_control_handle->output > MIN_OUTPUT )
+      {
+        setStovePower( ( uint8_t )( lrintf( temp_control_handle->output ) & 0xFF ) );
+      }
+      else
+      {
+        setStovePower( 0 );
+      }
 
-        break;
-      case RUN_MODE_PREVIOUS:
-        break;
-      case RUN_MODE_NEXT:
-        if ( getUsedRasten( temp_control_handle ) - temp_control_handle->current_rast <= 0 )
-        {
-          initTemperatureControl( temp_control_handle );
-          temp_control_handle->current_run_mode = RUN_MODE_STOP;
-        }
-        else
-        {
-          temp_control_handle->rasten[ temp_control_handle->current_rast ].time_running =
-              temp_control_handle->rasten[ temp_control_handle->current_rast ].time;
-          temp_control_handle->current_rast++;
-          temp_control_handle->current_run_mode = RUN_MODE_RUN;
-        }
-        break;
-      case RUN_MODE_PAUSE:
-        break;
-      case RUN_MODE_STOP:
-        // Switch off the stove and reset the temp control
-    	setStovePower( 0 );
-        break;
-    }
-    run_temperature_control = 0;
-
-#if defined( __ENABLE_SYSVIEW )
-    SEGGER_SYSVIEW_OnTaskStopReady( SYSVIEW_TASK_TEMP_CONTROL, 0 );
-#endif
+      break;
+    case RUN_MODE_PREVIOUS:
+      break;
+    case RUN_MODE_NEXT:
+      if ( getUsedRasten( temp_control_handle ) - temp_control_handle->current_rast <= 0 )
+      {
+        initTemperatureControl( temp_control_handle );
+        temp_control_handle->current_run_mode = RUN_MODE_STOP;
+      }
+      else
+      {
+        temp_control_handle->rasten[ temp_control_handle->current_rast ].time_running =
+            temp_control_handle->rasten[ temp_control_handle->current_rast ].time;
+        temp_control_handle->current_rast++;
+        temp_control_handle->current_run_mode = RUN_MODE_RUN;
+      }
+      break;
+    case RUN_MODE_PAUSE:
+      break;
+    case RUN_MODE_STOP:
+      // Switch off the stove and reset the temp control
+      setStovePower( 0 );
+      break;
   }
 }
 

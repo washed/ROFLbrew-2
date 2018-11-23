@@ -136,8 +136,6 @@ int main( void )
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
-  initTemperatureControl( &temp_control0 );
-
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
@@ -152,7 +150,6 @@ int main( void )
   /* USER CODE BEGIN WHILE */
   while ( 1 )
   {
-    handleTemperatureControl( &temp_control0 );
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

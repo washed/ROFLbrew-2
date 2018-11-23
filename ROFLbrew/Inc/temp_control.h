@@ -97,7 +97,6 @@ typedef struct TEMPERATURE_CONTROL
 } TEMPERATURE_CONTROL;
 
 extern TEMPERATURE_CONTROL temp_control0;
-extern volatile uint8_t run_temperature_control;
 
 void setGainStage( TEMPERATURE_CONTROL* temp_control_handle );
 void initTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle );
