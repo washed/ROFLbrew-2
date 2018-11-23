@@ -33,9 +33,9 @@ typedef struct STOVE
   uint16_t gpio_pin[ STOVE_NUM_PINS ];
 } STOVE;
 
-#define STACK_SIZE 0x2000
+#define stoveStackSize 0x2000
 
-uint32_t stoveTaskBuffer[ STACK_SIZE ];
+uint32_t stoveTaskBuffer[ stoveStackSize ];
 osStaticThreadDef_t stoveControlBlock;
 
 static void handleStove( STOVE* stove_handle );
@@ -61,7 +61,7 @@ void vTaskStove( void* pvParameters )
 
 osThreadId createTaskStove()
 {
-  osThreadStaticDef( stove, vTaskStove, osPriorityNormal, 0, STACK_SIZE, stoveTaskBuffer, &stoveControlBlock );
+  osThreadStaticDef( stove, vTaskStove, osPriorityNormal, 0, stoveStackSize, stoveTaskBuffer, &stoveControlBlock );
   return osThreadCreate( osThread( stove ), NULL );
 }
 

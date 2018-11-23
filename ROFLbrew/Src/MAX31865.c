@@ -45,25 +45,26 @@ const uint32_t MAX31865_DEVICES_DR_BANK_PIN[ MAX31865_MAX_DEVICES ][ 2 ] = {  //
   { MAX31865_3_DR_BANK, MAX31865_3_DR_PIN }
 };
 
-#define STACK_SIZE 0x400
-uint32_t MAX31865TaskBuffer[ STACK_SIZE ];
+#define MAX31865StackSize 0x400
+uint32_t MAX31865TaskBuffer[ MAX31865StackSize ];
 osStaticThreadDef_t MAX31865ControlBlock;
 
 void vTaskMAX31865( void* pvParameters )
 {
   for ( ;; )
   {
-	  handleMAX31865Devices();
+    handleMAX31865Devices();
   }
 
   // We should never get here
-  vTaskDelete(NULL);
+  vTaskDelete( NULL );
 }
 
 osThreadId createTaskMAX31865()
 {
-	osThreadStaticDef(MAX31865Task, vTaskMAX31865, osPriorityNormal, 0, STACK_SIZE, MAX31865TaskBuffer, &MAX31865ControlBlock);
-	return osThreadCreate(osThread(MAX31865Task), NULL);
+  osThreadStaticDef( MAX31865Task, vTaskMAX31865, osPriorityNormal, 0, MAX31865StackSize, MAX31865TaskBuffer,
+                     &MAX31865ControlBlock );
+  return osThreadCreate( osThread( MAX31865Task ), NULL );
 }
 
 void handleMAX31865Devices()

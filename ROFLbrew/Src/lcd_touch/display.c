@@ -28,8 +28,8 @@
 
 osThreadId createTaskDisplayBacklightUpdate();
 
-#define STACK_SIZE 0x2000
-uint32_t displayUpdateTaskBuffer[ STACK_SIZE ];
+#define displayUpdateStackSize 0x2000
+uint32_t displayUpdateTaskBuffer[ displayUpdateStackSize ];
 osStaticThreadDef_t displayUpdateControlBlock;
 
 #define displayBacklightUpdateStackSize 0x1000
@@ -66,8 +66,8 @@ osThreadId createTaskDisplayUpdate()
   gui_init();
 
   // Create the main display update thread
-  osThreadStaticDef( displayUpdate, vTaskDisplayUpdate, osPriorityNormal, 0, STACK_SIZE, displayUpdateTaskBuffer,
-                     &displayUpdateControlBlock );
+  osThreadStaticDef( displayUpdate, vTaskDisplayUpdate, osPriorityNormal, 0, displayUpdateStackSize,
+                     displayUpdateTaskBuffer, &displayUpdateControlBlock );
   osThreadId id = osThreadCreate( osThread( displayUpdate ), NULL );
 
   // Create the display backlight update thread
