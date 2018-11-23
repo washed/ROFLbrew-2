@@ -21,9 +21,6 @@
 #include "SEGGER_SYSVIEW_Conf.h"
 #endif
 
-int32_t MAX31865_TEMP;
-float MAX31865_TEMP_FLOAT;
-
 static inline void assertCS();
 static inline void deassertCS();
 static inline void powerOff();
@@ -41,6 +38,7 @@ static void initSPIIdleClock();
 #define MAX31865StackSize 0x400
 uint32_t MAX31865TaskBuffer[ MAX31865StackSize ];
 osStaticThreadDef_t MAX31865ControlBlock;
+osThreadId MAX31865TaskHandle;
 
 void vTaskMAX31865( void* pvParameters )
 {
@@ -59,34 +57,43 @@ osThreadId createTaskMAX31865()
 {
   osThreadStaticDef( MAX31865Task, vTaskMAX31865, osPriorityNormal, 0, MAX31865StackSize, MAX31865TaskBuffer,
                      &MAX31865ControlBlock );
-  return osThreadCreate( osThread( MAX31865Task ), NULL );
+  MAX31865TaskHandle = osThreadCreate( osThread( MAX31865Task ), NULL );
+  return MAX31865TaskHandle;
+}
+
+void MAX31865_notifyDataReadyFromISR()
+{
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  vTaskNotifyGiveFromISR( MAX31865TaskHandle, &xHigherPriorityTaskWoken );
+  portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 }
 
 static void handleMAX31865Devices()
 {
-  float r;
+  uint32_t dr_event_count = ulTaskNotifyTake( pdTRUE, 50 );
 
-  // if ( MAX31865_DEVICES_SAMPLE_READY )  // TODO: Use a task notification for this!
+  if ( dr_event_count != 0 )  // TODO: Use a task notification for this!
   {
     uint32_t rtd_data;
+    int32_t temperature_int;
 
     rtd_data = getRTDData_MAX31865();
 
     // TODO: Do any necessary post processing steps here
     if ( MAX31865_USE_CALLENDAR_VAN_DUSEN )
     {
-      r = ( (float)rtd_data * (float)MAX31865_REF_RESISTOR ) / MAX31865_RTD_DIVIDER;
-      MAX31865_TEMP = lrintf( (float)( ( r * ( MAX31865_CVD_A + r * ( MAX31865_CVD_B + r * MAX31865_CVD_C ) ) ) *
-                                       TEMP_INT_FACTOR ) ) -
-                      MAX31865_KELVIN_0dC;
+      float r = ( (float)rtd_data * (float)MAX31865_REF_RESISTOR ) / MAX31865_RTD_DIVIDER;
+      temperature_int = lrintf( (float)( ( r * ( MAX31865_CVD_A + r * ( MAX31865_CVD_B + r * MAX31865_CVD_C ) ) ) *
+                                         TEMP_INT_FACTOR ) ) -
+                        MAX31865_KELVIN_0dC;
     }
     else
     {
-      MAX31865_TEMP = lrintf( (float)( ( (float)rtd_data / 32.0 ) - 256.0 ) * (float)TEMP_INT_FACTOR );
+      temperature_int = lrintf( (float)( ( (float)rtd_data / 32.0 ) - 256.0 ) * (float)TEMP_INT_FACTOR );
     }
 
     // TODO: Send the sample to the temp_control task with a queue
-    addTemperatureSample( &temp_control0, MAX31865_TEMP );
+    addTemperatureSample( &temp_control0, temperature_int );
   }
 }
 

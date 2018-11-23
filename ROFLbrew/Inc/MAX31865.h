@@ -84,6 +84,7 @@ extern "C"
 #define MAX_31865_CFG_50HZ_ON ( 1 << MAX_31865_CFG_50HZ_ON_SHIFT )
 
   osThreadId createTaskMAX31865();
+  void MAX31865_notifyDataReadyFromISR();
 
 #ifdef __cplusplus
 }
