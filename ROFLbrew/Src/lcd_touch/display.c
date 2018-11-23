@@ -190,7 +190,7 @@ void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curv
     fade_def.fade_time = fade_time;
     fade_def.curve = 0;
 
-    // Make it possible to call this from an interrupt context
+    // TODO: Make it possible to call this from an interrupt context
     xQueueSend( backlightQueueHandle, &fade_def, 0 );
   }
 }
