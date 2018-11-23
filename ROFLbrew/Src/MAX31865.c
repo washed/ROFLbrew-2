@@ -21,29 +21,22 @@
 #include "SEGGER_SYSVIEW_Conf.h"
 #endif
 
-volatile uint32_t MAX31865_DEVICES_RTD_DATA[ MAX31865_MAX_DEVICES ];
-int32_t MAX31865_DEVICES_TEMP[ MAX31865_MAX_DEVICES ];
-float MAX31865_DEVICES_TEMP_FLOAT[ MAX31865_MAX_DEVICES ];
+int32_t MAX31865_TEMP;
+float MAX31865_TEMP_FLOAT;
 
-volatile uint8_t MAX31865_DEVICES_SAMPLE_READY[ MAX31865_MAX_DEVICES ] = { 0, 0, 0, 0 };
-volatile uint32_t MAX31865_DEVICES_TIME_SINCE_LAST_READ[ MAX31865_MAX_DEVICES ] = { 0, 0, 0, 0 };
+static inline void assertCS();
+static inline void deassertCS();
+static inline void powerOff();
+static inline void powerOn();
 
-static inline void assertCS( uint32_t device_num );
-static inline void deassertCS( uint32_t device_num );
-
-const uint32_t MAX31865_DEVICES_CS_BANK_PIN[ MAX31865_MAX_DEVICES ][ 2 ] = {  //
-  { MAX31865_0_CS_BANK, MAX31865_0_CS_PIN },
-  { MAX31865_1_CS_BANK, MAX31865_1_CS_PIN },
-  { MAX31865_2_CS_BANK, MAX31865_2_CS_PIN },
-  { MAX31865_3_CS_BANK, MAX31865_3_CS_PIN }
-};
-
-const uint32_t MAX31865_DEVICES_DR_BANK_PIN[ MAX31865_MAX_DEVICES ][ 2 ] = {  //
-  { MAX31865_0_DR_BANK, MAX31865_0_DR_PIN },
-  { MAX31865_1_DR_BANK, MAX31865_1_DR_PIN },
-  { MAX31865_2_DR_BANK, MAX31865_2_DR_PIN },
-  { MAX31865_3_DR_BANK, MAX31865_3_DR_PIN }
-};
+static void handleMAX31865Devices();
+static void initMAX31865();
+static uint32_t getRTDData_MAX31865();
+static void setCfgReg_MAX31865( uint8_t config_flags );
+static uint8_t getFaultStatus_MAX31865();
+static void setReg_MAX31865( uint8_t reg, uint8_t* p_data, uint8_t len );
+static void getReg_MAX31865( uint8_t reg, uint8_t* p_data, uint8_t len );
+static void initSPIIdleClock();
 
 #define MAX31865StackSize 0x400
 uint32_t MAX31865TaskBuffer[ MAX31865StackSize ];
@@ -51,7 +44,6 @@ osStaticThreadDef_t MAX31865ControlBlock;
 
 void vTaskMAX31865( void* pvParameters )
 {
-  initSPIIdleClock();
   initMAX31865();
 
   for ( ;; )
@@ -70,120 +62,95 @@ osThreadId createTaskMAX31865()
   return osThreadCreate( osThread( MAX31865Task ), NULL );
 }
 
-void handleMAX31865Devices()
+static void handleMAX31865Devices()
 {
   float r;
 
-  for ( uint32_t device_num = 0; device_num < MAX31865_CON_DEVICES; device_num++ )
+  // if ( MAX31865_DEVICES_SAMPLE_READY )  // TODO: Use a task notification for this!
   {
-    if ( MAX31865_DEVICES_SAMPLE_READY[ device_num ] )
+    uint32_t rtd_data;
+
+    rtd_data = getRTDData_MAX31865();
+
+    // TODO: Do any necessary post processing steps here
+    if ( MAX31865_USE_CALLENDAR_VAN_DUSEN )
     {
-#if defined( __ENABLE_SYSVIEW )
-      SEGGER_SYSVIEW_OnTaskStartExec( SYSVIEW_TASK_MAX31865_RX );
-#endif
-
-      MAX31865_DEVICES_TIME_SINCE_LAST_READ[ device_num ] = 0;
-      getRTDData_MAX31865( device_num );
-      // TODO: Do any necessary post processing steps here
-      if ( MAX31865_USE_CALLENDAR_VAN_DUSEN )
-      {
-        r = ( (float)MAX31865_DEVICES_RTD_DATA[ device_num ] * (float)MAX31865_REF_RESISTOR ) / MAX31865_RTD_DIVIDER;
-        MAX31865_DEVICES_TEMP[ device_num ] =
-            lrintf( (float)( ( r * ( MAX31865_CVD_A + r * ( MAX31865_CVD_B + r * MAX31865_CVD_C ) ) ) *
-                             TEMP_INT_FACTOR ) ) -
-            MAX31865_KELVIN_0dC;
-      }
-      else
-      {
-        // MAX31865_DEVICES_TEMP[device_num] =
-        // MAX31865_DEVICES_RTD_DATA[device_num];
-        MAX31865_DEVICES_TEMP[ device_num ] = lrintf(
-            (float)( ( (float)MAX31865_DEVICES_RTD_DATA[ device_num ] / 32.0 ) - 256.0 ) * (float)TEMP_INT_FACTOR );
-      }
-
-      switch ( device_num )
-      {
-        case 0:
-          addTemperatureSample( &temp_control0, MAX31865_DEVICES_TEMP[ device_num ] );
-          break;
-      }
-
-#if defined( __ENABLE_SYSVIEW )
-      SEGGER_SYSVIEW_OnTaskStopReady( SYSVIEW_TASK_LCD_UPDATE, 0 );
-#endif
+      r = ( (float)rtd_data * (float)MAX31865_REF_RESISTOR ) / MAX31865_RTD_DIVIDER;
+      MAX31865_TEMP = lrintf( (float)( ( r * ( MAX31865_CVD_A + r * ( MAX31865_CVD_B + r * MAX31865_CVD_C ) ) ) *
+                                       TEMP_INT_FACTOR ) ) -
+                      MAX31865_KELVIN_0dC;
     }
+    else
+    {
+      MAX31865_TEMP = lrintf( (float)( ( (float)rtd_data / 32.0 ) - 256.0 ) * (float)TEMP_INT_FACTOR );
+    }
+
+    // TODO: Send the sample to the temp_control task with a queue
+    addTemperatureSample( &temp_control0, MAX31865_TEMP );
   }
 }
 
-void initMAX31865()
+static void initMAX31865()
 {
-  uint8_t status_reg[ MAX31865_CON_DEVICES ], fault_status[ MAX31865_CON_DEVICES ], fault_detect_running;
+  uint8_t status_reg;
+  uint8_t fault_status;
+  uint8_t fault_detect_running;
 
-  ( (GPIO_TypeDef*)( MAX31865_PWR_BANK ) )->BSRR = MAX31865_PWR_PIN;
-
+  powerOff();
+  initSPIIdleClock();
+  HAL_Delay( 10 );
+  powerOn();
   HAL_Delay( 50 );
 
-  setCfgReg_MAX31865( 0, ( MAX_31865_CFG_VBIAS_ON | MAX_31865_CFG_FAULT_AUTODELAY | MAX_31865_CFG_50HZ_ON ) );
-  setCfgReg_MAX31865( 1, ( MAX_31865_CFG_VBIAS_ON | MAX_31865_CFG_FAULT_AUTODELAY | MAX_31865_CFG_50HZ_ON ) );
+  setCfgReg_MAX31865( ( MAX_31865_CFG_VBIAS_ON | MAX_31865_CFG_FAULT_AUTODELAY | MAX_31865_CFG_50HZ_ON ) );
 
   do
   {
+    // TODO: Add a timeout here!
     fault_detect_running = 0;
-    for ( uint8_t device_num = 0; device_num < MAX31865_CON_DEVICES; device_num++ )
+    getReg_MAX31865( MAX31865_CFG_REG_RD_ADDR, &status_reg, 1 );
+    fault_detect_running |= ( status_reg & MAX_31865_CFG_FAULT_AUTODELAY );
+    if ( !( status_reg & MAX_31865_CFG_FAULT_AUTODELAY ) )
     {
-      getReg_MAX31865( device_num, MAX31865_CFG_REG_RD_ADDR, &status_reg[ device_num ], 1 );
-      fault_detect_running |= ( status_reg[ device_num ] & MAX_31865_CFG_FAULT_AUTODELAY );
-      if ( !( status_reg[ device_num ] & MAX_31865_CFG_FAULT_AUTODELAY ) )
-      {
-        fault_status[ device_num ] = getFaultStatus_MAX31865( device_num );
-      }
+      fault_status = getFaultStatus_MAX31865();
     }
   } while ( fault_detect_running );
 
-  for ( uint8_t device_num = 0; device_num < MAX31865_CON_DEVICES; device_num++ )
+  if ( fault_status == 0 )
   {
-    if ( fault_status[ device_num ] == 0 )
-      setCfgReg_MAX31865( device_num, ( MAX_31865_CFG_VBIAS_ON | MAX_31865_CFG_CONVAUTO_ON | MAX_31865_CFG_FAULT_NONE |
-                                        MAX_31865_CFG_50HZ_ON ) );
-    else
-      setCfgReg_MAX31865( device_num, 0 );
+    setCfgReg_MAX31865(
+        ( MAX_31865_CFG_VBIAS_ON | MAX_31865_CFG_CONVAUTO_ON | MAX_31865_CFG_FAULT_NONE | MAX_31865_CFG_50HZ_ON ) );
+  }
+  else
+  {
+    setCfgReg_MAX31865( 0 );
   }
 }
 
-void checkMAX31865WDG()
-{
-  for ( uint32_t device_num = 0; device_num < MAX31865_CON_DEVICES; device_num++ )
-  {
-    if ( MAX31865_DEVICES_TIME_SINCE_LAST_READ[ device_num ] >= MAX31865_WDG_PERIOD )
-      MAX31865_DEVICES_SAMPLE_READY[ device_num ] = 1;
-  }
-}
-
-void getRTDData_MAX31865( uint32_t device_num )
+static uint32_t getRTDData_MAX31865()
 {
   const uint8_t tx_data[ 3 ] = { MAX31865_RTDMSB_REG_RD_ADDR, 0xFF, 0xFF };
   uint8_t rx_data[ 3 ];
 
-  assertCS( device_num );
+  assertCS();
   HAL_SPI_TransmitReceive( MAX31865_SPI_INSTANCE_PT, (uint8_t*)&tx_data, (uint8_t*)&rx_data, 3, 100 );
-  deassertCS( device_num );
-  MAX31865_DEVICES_SAMPLE_READY[ device_num ] = 0;
-  MAX31865_DEVICES_RTD_DATA[ device_num ] = ( ( ( rx_data[ 1 ] << 8 ) | rx_data[ 2 ] ) >> 1 ) & 0x7FFF;
+  deassertCS();
+  return ( ( ( ( rx_data[ 1 ] << 8 ) | rx_data[ 2 ] ) >> 1 ) & 0x7FFF );
 }
 
-void setCfgReg_MAX31865( uint32_t device_num, uint8_t config_flags )
+static void setCfgReg_MAX31865( uint8_t config_flags )
 {
-  setReg_MAX31865( device_num, MAX31865_CFG_REG_WR_ADDR, &config_flags, 1 );
+  setReg_MAX31865( MAX31865_CFG_REG_WR_ADDR, &config_flags, 1 );
 }
 
-uint8_t getFaultStatus_MAX31865( uint32_t device_num )
+static uint8_t getFaultStatus_MAX31865()
 {
   uint8_t fault_status;
-  getReg_MAX31865( device_num, MAX31865_FLTSTAT_REG_RD_ADDR, &fault_status, 1 );
+  getReg_MAX31865( MAX31865_FLTSTAT_REG_RD_ADDR, &fault_status, 1 );
   return ( fault_status & MAX31865_FLTSTAT_REG_MASK );
 }
 
-void setReg_MAX31865( uint32_t device_num, uint8_t reg, uint8_t* p_data, uint8_t len )
+static void setReg_MAX31865( uint8_t reg, uint8_t* p_data, uint8_t len )
 {
   uint8_t tx_data[ 9 ] = { reg, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
   uint8_t rx_data[ 9 ];
@@ -191,49 +158,49 @@ void setReg_MAX31865( uint32_t device_num, uint8_t reg, uint8_t* p_data, uint8_t
   if ( ( p_data == NULL ) || ( len > 8 ) || ( len < 1 ) ) return;
 
   memcpy( &tx_data[ 1 ], p_data, len );
-  assertCS( device_num );
+  assertCS();
   HAL_SPI_TransmitReceive( MAX31865_SPI_INSTANCE_PT, (uint8_t*)&tx_data, (uint8_t*)&rx_data, len + 1, 50 );
-  deassertCS( device_num );
+  deassertCS();
 }
 
-void getReg_MAX31865( uint32_t device_num, uint8_t reg, uint8_t* p_data, uint8_t len )
+static void getReg_MAX31865( uint8_t reg, uint8_t* p_data, uint8_t len )
 {
   uint8_t tx_data[ 9 ] = { reg, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
   uint8_t rx_data[ 9 ];
 
   if ( ( p_data == NULL ) || ( len > 8 ) || ( len < 1 ) ) return;
 
-  assertCS( device_num );
+  assertCS();
   HAL_SPI_TransmitReceive( MAX31865_SPI_INSTANCE_PT, (uint8_t*)tx_data, (uint8_t*)rx_data, len + 1, 50 );
-  deassertCS( device_num );
+  deassertCS();
   memcpy( p_data, &rx_data[ 1 ], len );
 }
 
-void initSPIIdleClock()
+static void initSPIIdleClock()
 {
   uint8_t tx_data[ 2 ] = { 0xFF, 0xFF };
   uint8_t rx_data[ 2 ];
-  assertCS( 0 );
+  assertCS();
   HAL_SPI_TransmitReceive( MAX31865_SPI_INSTANCE_PT, (uint8_t*)&tx_data, (uint8_t*)&rx_data, 2, 10 );
-  deassertCS( 0 );
+  deassertCS();
 }
 
-static inline void assertCS( uint32_t device_num )
+static inline void assertCS()
 {
-  ( (GPIO_TypeDef*)( MAX31865_DEVICES_CS_BANK_PIN[ device_num ][ 0 ] ) )->BSRR =
-      ( MAX31865_DEVICES_CS_BANK_PIN[ device_num ][ 1 ] << 16UL );
+  MAX31865_CS_BANK->BSRR = ( MAX31865_CS_PIN << 16UL );
 }
 
-static inline void deassertCS( uint32_t device_num )
+static inline void deassertCS()
 {
-  ( (GPIO_TypeDef*)( MAX31865_DEVICES_CS_BANK_PIN[ device_num ][ 0 ] ) )->BSRR =
-      MAX31865_DEVICES_CS_BANK_PIN[ device_num ][ 1 ];
+  MAX31865_CS_BANK->BSRR = MAX31865_CS_PIN;
 }
 
-void tickMAX31865WDGTimer( uint32_t ticks )
+static inline void powerOff()
 {
-  for ( uint32_t device_num = 0; device_num < MAX31865_CON_DEVICES; device_num++ )
-  {
-    MAX31865_DEVICES_TIME_SINCE_LAST_READ[ device_num ] += ticks;
-  }
+  MAX31865_PWR_BANK->BSRR = ( MAX31865_PWR_PIN << 16UL );
+}
+
+static inline void powerOn()
+{
+  MAX31865_PWR_BANK->BSRR = MAX31865_PWR_PIN;
 }

@@ -19,9 +19,7 @@ extern "C"
 
 #define MAX31865_SPI_INSTANCE_PT &hspi3
 
-#define MAX31865_MAX_DEVICES 4
-
-#define MAX31865_WDG_PERIOD 25000  //�s
+#define MAX31865_WDG_PERIOD 25000  // ms
 
 #define MAX31865_CON_DEVICES 1
 #define MAX31865_USE_CALLENDAR_VAN_DUSEN 0  // TODO: This is still broken
@@ -38,28 +36,12 @@ extern "C"
 #define MAX31865_RTD_DIVIDER (float)( MAX31865_MAX_RTD * MAX31865_R0minus1 )
 #define MAX31865_KELVIN_0dC 2731600
 
-#define MAX31865_0_CS_BANK ( uint32_t ) MAX31865_CS_GPIO_Port
-#define MAX31865_1_CS_BANK ( uint32_t ) 0
-#define MAX31865_2_CS_BANK (uint32_t)0
-#define MAX31865_3_CS_BANK (uint32_t)0
-
-#define MAX31865_0_CS_PIN ( uint32_t ) MAX31865_CS_Pin
-#define MAX31865_1_CS_PIN ( uint32_t ) 0
-#define MAX31865_2_CS_PIN (uint32_t)0
-#define MAX31865_3_CS_PIN (uint32_t)0
-
-#define MAX31865_0_DR_BANK ( uint32_t ) MAX31865_DR_GPIO_Port
-#define MAX31865_1_DR_BANK ( uint32_t )0
-#define MAX31865_2_DR_BANK (uint32_t)0
-#define MAX31865_3_DR_BANK (uint32_t)0
-
-#define MAX31865_0_DR_PIN ( uint32_t ) MAX31865_DR_Pin
-#define MAX31865_1_DR_PIN ( uint32_t )0
-#define MAX31865_2_DR_PIN (uint32_t)0
-#define MAX31865_3_DR_PIN (uint32_t)0
-
-#define MAX31865_PWR_BANK ( uint32_t ) MAX31865_PWR_GPIO_Port
-#define MAX31865_PWR_PIN ( uint32_t ) MAX31865_PWR_Pin
+#define MAX31865_CS_BANK MAX31865_CS_GPIO_Port
+#define MAX31865_CS_PIN MAX31865_CS_Pin
+#define MAX31865_DR_BANK MAX31865_DR_GPIO_Port
+#define MAX31865_DR_PIN MAX31865_DR_Pin
+#define MAX31865_PWR_BANK MAX31865_PWR_GPIO_Port
+#define MAX31865_PWR_PIN MAX31865_PWR_Pin
 
 #define MAX31865_CFG_REG_RD_ADDR 0x00
 #define MAX31865_RTDMSB_REG_RD_ADDR 0x01
@@ -101,26 +83,7 @@ extern "C"
 #define MAX_31865_CFG_FAULT_FIN_MAN ( 3 << MAX_31865_CFG_FAULT_SHIFT )
 #define MAX_31865_CFG_50HZ_ON ( 1 << MAX_31865_CFG_50HZ_ON_SHIFT )
 
-  extern volatile uint32_t MAX31865_DEVICES_RTD_DATA[ MAX31865_MAX_DEVICES ];
-  extern int32_t MAX31865_DEVICES_TEMP[ MAX31865_MAX_DEVICES ];
-  extern volatile uint32_t MAX31865_DEVICES_TIME_SINCE_LAST_READ[ MAX31865_MAX_DEVICES ];
-  extern volatile uint8_t MAX31865_DEVICES_SAMPLE_READY[ MAX31865_MAX_DEVICES ];
-
-  // const uint32_t MAX31865_DEVICES_CS_BANK_PIN[MAX31865_MAX_DEVICES][2];
-  // const uint32_t MAX31865_DEVICES_DR_BANK_PIN[MAX31865_MAX_DEVICES][2];
-
   osThreadId createTaskMAX31865();
-  void handleMAX31865Devices();
-  void initMAX31865();
-  void checkMAX31865WDG();
-  void getRTDData_MAX31865( uint32_t device_num );
-  void setCfgReg_MAX31865( uint32_t device_num, uint8_t config_flags );
-  uint8_t getFaultStatus_MAX31865( uint32_t device_num );
-  void setReg_MAX31865( uint32_t device_num, uint8_t reg, uint8_t* p_data, uint8_t len );
-  void getReg_MAX31865( uint32_t device_num, uint8_t reg, uint8_t* p_data, uint8_t len );
-  void initSPIIdleClock();
-  void HAL_GPIO_EXTI_Callback( uint16_t GPIO_Pin );
-  void tickMAX31865WDGTimer( uint32_t ticks );
 
 #ifdef __cplusplus
 }
