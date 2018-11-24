@@ -321,7 +321,7 @@ void printTempControlState( TEMPERATURE_CONTROL* temp_control_handle )
 
 void putTemperatureSample( int32_t sample )
 {
-  xQueueSend( tempControlSampleQueueHandle, sample, 10 );
+  xQueueSend( tempControlSampleQueueHandle, &sample, 10 );
 }
 
 void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int32_t sample )
