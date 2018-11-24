@@ -93,7 +93,8 @@ static void handleMAX31865Devices()
     }
 
     // TODO: Send the sample to the temp_control task with a queue
-    addTemperatureSample( &temp_control0, temperature_int );
+    // addTemperatureSample( &temp_control0, temperature_int );
+    putTemperatureSample( temperature_int );
   }
 }
 

@@ -20,9 +20,13 @@
 
 #define tempControlPeriod 1000UL
 #define tempControlStackSize 0x2000
+#define tempControlSampleQueueItemCount 100
 
 uint32_t tempControlTaskBuffer[ tempControlStackSize ];
 osStaticThreadDef_t tempControlControlBlock;
+uint8_t tempControlSampleQueueBuffer[ tempControlSampleQueueItemCount * sizeof( int32_t ) ];
+osStaticMessageQDef_t tempControlSampleQueueControlblock;
+osMessageQId tempControlSampleQueueHandle;
 
 TEMPERATURE_CONTROL temp_control0;
 
@@ -48,7 +52,13 @@ osThreadId createTaskTempControl()
 {
   osThreadStaticDef( tempControl, vTaskTempControl, osPriorityNormal, 0, tempControlStackSize, tempControlTaskBuffer,
                      &tempControlControlBlock );
-  return osThreadCreate( osThread( tempControl ), NULL );
+  osThreadId id = osThreadCreate( osThread( tempControl ), NULL );
+
+  osMessageQStaticDef( tempControlSampleQ, tempControlSampleQueueItemCount, int32_t, tempControlSampleQueueBuffer,
+                       &tempControlSampleQueueControlblock );
+  tempControlSampleQueueHandle = osMessageCreate( &os_messageQ_def_tempControlSampleQ, NULL );
+
+  return id;
 }
 
 void initTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
@@ -308,6 +318,11 @@ void printTempControlState( TEMPERATURE_CONTROL* temp_control_handle )
   memset( uart_log_string, 0, 128 );
 }
 #endif
+
+void putTemperatureSample( int32_t sample )
+{
+  xQueueSend( tempControlSampleQueueHandle, sample, 10 );
+}
 
 void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int32_t sample )
 {
