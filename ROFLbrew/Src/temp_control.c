@@ -24,6 +24,12 @@
 
 uint32_t tempControlTaskBuffer[ tempControlStackSize ];
 osStaticThreadDef_t tempControlControlBlock;
+
+#define tempControlSampleCollectStackSize 0x1000
+
+uint32_t tempControlSampleCollectTaskBuffer[ tempControlSampleCollectStackSize ];
+osStaticThreadDef_t tempControlSampleCollectControlBlock;
+
 uint8_t tempControlSampleQueueBuffer[ tempControlSampleQueueItemCount * sizeof( int32_t ) ];
 osStaticMessageQDef_t tempControlSampleQueueControlblock;
 osMessageQId tempControlSampleQueueHandle;
@@ -32,6 +38,38 @@ TEMPERATURE_CONTROL temp_control0;
 
 char uart_log_string[ 128 ];
 char uart_log_temp_string[ 64 ];
+
+void vTaskTempControlSampleCollect( void* pvParameters )
+{
+  uint32_t PreviousWakeTime = osKernelSysTick();
+  for ( ;; )
+  {
+    int32_t sample;
+    // TODO: Collect samples from queue here
+    if ( pdPASS == xQueueReceive( tempControlSampleQueueHandle, &sample, 0 ) )
+    {
+      // TODO: Maybe we should use a binary semaphore to prevent a data race?
+      addTemperatureSample( &temp_control0, sample );
+    }
+  }
+
+  // We should never get here
+  vTaskDelete( NULL );
+}
+
+osThreadId createTaskTempControlSampleCollector()
+{
+  osThreadStaticDef( tempControlSampleCollect, vTaskTempControlSampleCollect, osPriorityNormal, 0,
+                     tempControlSampleCollectStackSize, tempControlSampleCollectTaskBuffer,
+                     &tempControlSampleCollectControlBlock );
+  osThreadId id = osThreadCreate( osThread( tempControlSampleCollect ), NULL );
+
+  osMessageQStaticDef( tempControlSampleQ, tempControlSampleQueueItemCount, int32_t, tempControlSampleQueueBuffer,
+                       &tempControlSampleQueueControlblock );
+  tempControlSampleQueueHandle = osMessageCreate( &os_messageQ_def_tempControlSampleQ, NULL );
+
+  return id;
+}
 
 void vTaskTempControl( void* pvParameters )
 {
@@ -54,6 +92,9 @@ osThreadId createTaskTempControl()
                      &tempControlControlBlock );
   osThreadId id = osThreadCreate( osThread( tempControl ), NULL );
 
+  createTaskTempControlSampleCollector();
+
+  // TODO: Create filtered q here?
   osMessageQStaticDef( tempControlSampleQ, tempControlSampleQueueItemCount, int32_t, tempControlSampleQueueBuffer,
                        &tempControlSampleQueueControlblock );
   tempControlSampleQueueHandle = osMessageCreate( &os_messageQ_def_tempControlSampleQ, NULL );
