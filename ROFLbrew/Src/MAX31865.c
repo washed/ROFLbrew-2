@@ -72,7 +72,7 @@ static void handleMAX31865Devices()
 {
   uint32_t dr_event_count = ulTaskNotifyTake( pdTRUE, 50 );
 
-  if ( dr_event_count != 0 )  // TODO: Use a task notification for this!
+  if ( dr_event_count != 0 )
   {
     uint32_t rtd_data;
     int32_t temperature_int;
