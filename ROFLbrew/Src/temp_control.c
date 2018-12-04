@@ -400,7 +400,8 @@ static void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int3
   static uint32_t sample_buffer_index = 0, temperature_valid = 0;
   int64_t sample_sum = 0;
   int32_t delta_Temperature, delta_Time;
-  float rate_sample, rate_sample_sum;
+  float rate_sample = 0.0f;
+  float rate_sample_sum = 0.0f;
 
   if ( temp_control_handle->temperature_sample_filter_factor > 0 )
   {
@@ -425,7 +426,7 @@ static void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int3
       for ( uint32_t i = 0; i < temp_control_handle->temperature_slope_filter_factor; i++ )
       {
         rate_sample_sum += temp_control_handle->temperature_slope_buffer[ current_buffer_index++ ];
-        if ( current_buffer_index >= temp_control_handle->temperature_slope_filter_factor ) current_buffer_index = 0;
+        if ( current_buffer_index > temp_control_handle->temperature_slope_filter_factor ) current_buffer_index = 0;
       }
 
 #ifdef USE_MUTEX_TEMP_RATE
