@@ -97,6 +97,7 @@ typedef struct TEMPERATURE_CONTROL
 } TEMPERATURE_CONTROL;
 
 extern TEMPERATURE_CONTROL temp_control0;
+BaseType_t getTemperatureRate( float* rate_ptr );
 
 void modifyRast( TEMPERATURE_CONTROL* temp_control_handle, uint8_t rast_index, int32_t temperature_delta,
                  int32_t time_delta );

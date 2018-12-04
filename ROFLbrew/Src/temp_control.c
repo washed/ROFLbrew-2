@@ -33,6 +33,10 @@ osStaticThreadDef_t tempControlSampleCollectControlBlock;
 uint8_t tempControlSampleQueueBuffer[ tempControlSampleQueueItemCount * sizeof( int32_t ) ];
 osStaticMessageQDef_t tempControlSampleQueueControlblock;
 osMessageQId tempControlSampleQueueHandle;
+#ifdef USE_MUTEX_TEMP_RATE
+SemaphoreHandle_t tempControlSampleCollectMutex;
+StaticSemaphore_t tempControlSampleCollectMutexBuffer;
+#endif
 
 TEMPERATURE_CONTROL temp_control0;
 
@@ -72,6 +76,10 @@ osThreadId createTaskTempControlSampleCollector()
   osMessageQStaticDef( tempControlSampleQ, tempControlSampleQueueItemCount, int32_t, tempControlSampleQueueBuffer,
                        &tempControlSampleQueueControlblock );
   tempControlSampleQueueHandle = osMessageCreate( &os_messageQ_def_tempControlSampleQ, NULL );
+
+#ifdef USE_MUTEX_TEMP_RATE
+  tempControlSampleCollectMutex = xSemaphoreCreateMutexStatic( &tempControlSampleCollectMutexBuffer );
+#endif
 
   return id;
 }
@@ -187,6 +195,23 @@ static void initTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
   temp_control_handle->pid.Ki = temp_control_handle->gain_stages[ temp_control_handle->current_gain_stage ].I;
   temp_control_handle->pid.Kd = temp_control_handle->gain_stages[ temp_control_handle->current_gain_stage ].D;
   arm_pid_init_f32( &temp_control_handle->pid, 1 );
+}
+
+BaseType_t getTemperatureRate( float* rate_ptr )
+{
+#ifdef USE_MUTEX_TEMP_RATE
+  if ( pdTRUE == xSemaphoreTake( tempControlSampleCollectMutex, 1 ) )
+  {
+#endif
+    *rate_ptr = temp_control0.temperature_rate;
+#ifdef USE_MUTEX_TEMP_RATE
+    xSemaphoreGive( tempControlSampleCollectMutex );
+#endif
+    return pdTRUE;
+#ifdef USE_MUTEX_TEMP_RATE
+  }
+  return pdFALSE;
+#endif
 }
 
 uint32_t getValidGainStage( TEMPERATURE_CONTROL* temp_control_handle )
@@ -402,7 +427,16 @@ static void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int3
         rate_sample_sum += temp_control_handle->temperature_slope_buffer[ current_buffer_index++ ];
         if ( current_buffer_index >= temp_control_handle->temperature_slope_filter_factor ) current_buffer_index = 0;
       }
-      temp_control_handle->temperature_rate = rate_sample_sum / temp_control_handle->temperature_slope_filter_factor;
+
+#ifdef USE_MUTEX_TEMP_RATE
+      if ( pdTRUE == xSemaphoreTake( tempControlSampleCollectMutex, 1 ) )
+      {
+#endif
+        temp_control_handle->temperature_rate = rate_sample_sum / temp_control_handle->temperature_slope_filter_factor;
+#ifdef USE_MUTEX_TEMP_RATE
+        xSemaphoreGive( tempControlSampleCollectMutex );
+      }
+#endif
     }
     if ( temperature_valid == 1 )
     {

@@ -430,12 +430,17 @@ static void gui_update_set_temperature( uint8_t force_update )
 static void gui_update_rate( uint8_t force_update )
 {
   static float last_rate;
+  float rate;
 
-  if ( ( fabs( last_rate - temp_control0.temperature_rate ) >= 0.01 ) || force_update )
+  if ( pdTRUE == getTemperatureRate( &rate ) )
   {
-    sprintf( temperature_rate_string, "%.2f °C/s", temp_control0.temperature_rate );
-    UG_TextboxSetText( &window_1, TXB_ID_5, temperature_rate_string );
-    last_rate = temp_control0.temperature_rate;
+    if ( ( fabs( last_rate - rate ) >= 0.01 ) || force_update )
+    {
+      sprintf( temperature_rate_string, "%.2f °C/s", rate );
+
+      UG_TextboxSetText( &window_1, TXB_ID_5, temperature_rate_string );
+      last_rate = rate;
+    }
   }
 }
 
