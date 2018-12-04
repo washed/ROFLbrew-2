@@ -98,10 +98,6 @@ typedef struct TEMPERATURE_CONTROL
 
 extern TEMPERATURE_CONTROL temp_control0;
 
-void setGainStage( TEMPERATURE_CONTROL* temp_control_handle );
-void initTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle );
-void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle );
-void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int32_t sample );
 void modifyRast( TEMPERATURE_CONTROL* temp_control_handle, uint8_t rast_index, int32_t temperature_delta,
                  int32_t time_delta );
 void setRast( TEMPERATURE_CONTROL* temp_control_handle, uint8_t rast_index, int32_t temperature, int32_t time,

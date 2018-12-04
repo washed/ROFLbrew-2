@@ -39,6 +39,11 @@ TEMPERATURE_CONTROL temp_control0;
 char uart_log_string[ 128 ];
 char uart_log_temp_string[ 64 ];
 
+static void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle );
+static void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int32_t sample );
+static void initTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle );
+static void setGainStage( TEMPERATURE_CONTROL* temp_control_handle );
+
 void vTaskTempControlSampleCollect( void* pvParameters )
 {
   uint32_t PreviousWakeTime = osKernelSysTick();
@@ -102,7 +107,7 @@ osThreadId createTaskTempControl()
   return id;
 }
 
-void initTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
+static void initTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
 {
   // Init PID instance
 
@@ -208,7 +213,7 @@ uint32_t getValidGainStage( TEMPERATURE_CONTROL* temp_control_handle )
   return 0xFFFFFFFF;
 }
 
-void setGainStage( TEMPERATURE_CONTROL* temp_control_handle )
+static void setGainStage( TEMPERATURE_CONTROL* temp_control_handle )
 {
   uint32_t new_gain_stage = getValidGainStage( temp_control_handle );
 
@@ -227,7 +232,7 @@ void setGainStage( TEMPERATURE_CONTROL* temp_control_handle )
   }
 }
 
-void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
+static void handleTemperatureControl( TEMPERATURE_CONTROL* temp_control_handle )
 {
   switch ( temp_control_handle->current_run_mode )
   {
@@ -365,7 +370,7 @@ void putTemperatureSample( int32_t sample )
   xQueueSend( tempControlSampleQueueHandle, &sample, 10 );
 }
 
-void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int32_t sample )
+static void addTemperatureSample( TEMPERATURE_CONTROL* temp_control_handle, int32_t sample )
 {
   static uint32_t sample_buffer_index = 0, temperature_valid = 0;
   int64_t sample_sum = 0;
