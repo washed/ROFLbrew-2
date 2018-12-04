@@ -146,11 +146,13 @@ void pset( uint16_t x, uint16_t y, uint16_t col )
 
 void lcd_waitForVSync()
 {
+#ifdef LCD_WAIT_FOR_VSYNC
   // Wait for vertical sync
   while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_RESET )
     ;
   while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_SET )
     ;
+#endif
 }
 
 void lcd_clear( unsigned int i )
