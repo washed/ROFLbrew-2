@@ -55,7 +55,7 @@ void vTaskMAX31865( void* pvParameters )
 
 osThreadId createTaskMAX31865()
 {
-  osThreadStaticDef( MAX31865Task, vTaskMAX31865, osPriorityNormal, 0, MAX31865StackSize, MAX31865TaskBuffer,
+  osThreadStaticDef( MAX31865Task, vTaskMAX31865, osPriorityRealtime, 0, MAX31865StackSize, MAX31865TaskBuffer,
                      &MAX31865ControlBlock );
   MAX31865TaskHandle = osThreadCreate( osThread( MAX31865Task ), NULL );
   return MAX31865TaskHandle;

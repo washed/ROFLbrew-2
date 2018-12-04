@@ -66,7 +66,7 @@ osThreadId createTaskDisplayUpdate()
   gui_init();
 
   // Create the main display update thread
-  osThreadStaticDef( displayUpdate, vTaskDisplayUpdate, osPriorityNormal, 0, displayUpdateStackSize,
+  osThreadStaticDef( displayUpdate, vTaskDisplayUpdate, osPriorityAboveNormal, 0, displayUpdateStackSize,
                      displayUpdateTaskBuffer, &displayUpdateControlBlock );
   osThreadId id = osThreadCreate( osThread( displayUpdate ), NULL );
 
