@@ -100,10 +100,6 @@ void gui_init()
   // UG_DriverEnable( DRIVER_DRAW_LINE );
   UG_DriverEnable( DRIVER_FILL_FRAME );
   UG_DriverEnable( DRIVER_FILL_AREA );
-
-  gui_init_mainwindow();
-
-  UG_WindowShow( &window_1 );
 }
 
 void gui_init_mainwindow()

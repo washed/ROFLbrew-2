@@ -46,8 +46,14 @@ int32_t stepsize_brightness = 0;
 
 fade_def_t lcd_backlight_fade;
 
+// TODO: Improve this
+extern UG_WINDOW window_1;
+
 void vTaskDisplayUpdate( void* pvParameters )
 {
+	  gui_init_mainwindow();
+	  UG_WindowShow( &window_1 );
+
   uint32_t PreviousWakeTime = osKernelSysTick();
   for ( ;; )
   {
