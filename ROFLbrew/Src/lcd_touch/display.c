@@ -45,6 +45,8 @@ osMessageQId backlightQueueHandle;
 uint32_t current_brightness = LCD_MIN_BRIGHTNESS;
 int32_t stepsize_brightness = 0;
 
+uint32_t duration = 0;
+
 fade_def_t lcd_backlight_fade;
 
 // TODO: Improve this
@@ -184,6 +186,8 @@ void display_notifyTEFromISR()
 
 void handleDisplayUpdate()
 {
+  static uint32_t last_tick = 0;
+
   if ( touchEvent.touch_count > 0 )
     UG_TouchUpdate( touchEvent.x1, touchEvent.y1, TOUCH_STATE_PRESSED );
   else
@@ -195,6 +199,8 @@ void handleDisplayUpdate()
   uint32_t dr_event_count = ulTaskNotifyTake( pdTRUE, 50 );
   if ( dr_event_count != 0 )
   {
+    duration = osKernelSysTick() - last_tick;
+    last_tick = osKernelSysTick();
     vTaskSuspendAll();
     gui_update();
     UG_Update();

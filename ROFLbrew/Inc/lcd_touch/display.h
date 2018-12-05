@@ -58,6 +58,8 @@ extern "C"
   void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curve_t curve );
   uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color );
 
+  extern uint32_t duration;
+
   RgbColor HsvToRgb( HsvColor hsv );
   HsvColor RgbToHsv( RgbColor rgb );
 
