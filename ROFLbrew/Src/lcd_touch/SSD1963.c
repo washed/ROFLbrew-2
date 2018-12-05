@@ -143,6 +143,8 @@ void lcd_clear( unsigned int i )
 #if USE_LCD_DMA
 
   lcd_setPosition( 0, 799, 0, 479 );
+
+  // TODO: We shouldn't wait like this in a task!
   // Wait for DMA ready
   while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
     ;
@@ -151,6 +153,8 @@ void lcd_clear( unsigned int i )
   {
     // Start new DMA Transfer
     HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t)&i, (uint32_t)0x60020000, 64000 );
+
+    // TODO: We shouldn't wait like this in a task!
     // Wait for DMA ready
     while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
       ;

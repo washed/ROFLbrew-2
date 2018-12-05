@@ -234,6 +234,7 @@ uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
   lcd_setPosition( x1, x2, y1, y2 );
 
 #ifdef USE_LCD_DMA
+  // TODO: We shouldn't wait like this in a task!
   while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
     ;
 
@@ -245,10 +246,12 @@ uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
       tx_pixel_count = total_pixel_count;
 
     // Start new DMA Transfer
+    // TODO: We shouldn't wait like this in a task!
     while ( HAL_OK != HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t)&color, (uint32_t)0x60020000, tx_pixel_count ) )
       ;
 
     // Wait for DMA ready
+    // TODO: We shouldn't wait like this in a task!
     while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
       ;
     total_pixel_count -= tx_pixel_count;
@@ -277,6 +280,7 @@ uint8_t lcd_fillArea( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16
   // Set write area
   lcd_setPosition( x1, x2, y1, y2 );
 
+  // TODO: We shouldn't wait like this in a task!
   while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
     ;
 
@@ -290,6 +294,7 @@ uint8_t lcd_fillArea( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16
     // Start new DMA Transfer
     HAL_DMA_Start_IT( LCD_HAL_DMA_INSTANCE, (uint32_t)&color, (uint32_t)0x60020000, tx_pixel_count );
     // Wait for DMA ready
+    // TODO: We shouldn't wait like this in a task!
     while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
       ;
     total_pixel_count -= tx_pixel_count;

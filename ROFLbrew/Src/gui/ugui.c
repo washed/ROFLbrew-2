@@ -6663,6 +6663,7 @@ _UG_PutChar( char chr, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc, const UG_FO
           //for (uint32_t v = 0; v < total_pixels; v++)
           //  *lcd_data = character_array[v];
 
+          // TODO: We shouldn't wait like this in a task!
           while (HAL_DMA_GetState( UGUI_HAL_DMA_INSTANCE) != HAL_DMA_STATE_READY)
             ;
 
@@ -6672,6 +6673,8 @@ _UG_PutChar( char chr, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc, const UG_FO
           // Start new DMA Transfer
           HAL_DMA_Start_IT( UGUI_HAL_DMA_INSTANCE, (uint32_t) & character_array[0], (uint32_t) lcd_data,
                             total_pixels );
+
+          // TODO: We shouldn't wait like this in a task!
           // Wait for DMA ready
           while (HAL_DMA_GetState( UGUI_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY)
             ;
