@@ -24,9 +24,9 @@ void lcd_init()
   // SSD1963 initialization
 
   HAL_GPIO_WritePin( LCD_nRST_GPIO_Port, LCD_nRST_Pin, GPIO_PIN_RESET );
-  HAL_Delay( 100 );
+  HAL_Delay( 10 );
   HAL_GPIO_WritePin( LCD_nRST_GPIO_Port, LCD_nRST_Pin, GPIO_PIN_SET );
-  HAL_Delay( 100 );
+  HAL_Delay( 10 );
 
   lcd_writeCommand( 0x00E2 );    //PLL multiplier, set PLL clock to 120M
   lcd_writeDataShort( 0x0023 );  //N=0x36 for 6.5M, 0x23 for 10M crystal
@@ -97,30 +97,24 @@ void lcd_init()
 
   HAL_Delay( 1 );  //TODO: 5us
 
-  lcd_writeCommand( 0x0029 );  //display on
-  /*
-	 lcd_writeCommand(0x00BE); //set PWM for B/L
-	 lcd_writeDataShort(0x0006);
-	 lcd_writeDataShort(0x0080);
-	 lcd_writeDataShort(0x0001);
-	 lcd_writeDataShort(0x0002);
-	 lcd_writeDataShort(0x0000);
-	 lcd_writeDataShort(0x0000);
-	 */
-
-  lcd_writeCommand( 0x00d0 );
-  lcd_writeDataShort( 0x000d );  // 0x000d
-
+  // Backlight PWM off
   lcd_writeCommand( 0x00BE );    //set PWM for B/L
-  lcd_writeDataShort( 0x0006 );  //pwm frequency
-  lcd_writeDataShort( 0x0010 );  //pwm duty cycle
-  lcd_writeDataShort( 0x0009 );  // Bit 3: 0 := host; 1 := DBC Bit 0: pwm enable
-  lcd_writeDataShort( 0x0002 );  // DBC manual brightness
+  lcd_writeDataShort( 0x0000 );  //pwm frequency
+  lcd_writeDataShort( 0x0000 );  //pwm duty cycle
+  lcd_writeDataShort( 0x0000 );  // Bit 3: 0 := host; 1 := DBC Bit 0: pwm enable
+  lcd_writeDataShort( 0x0000 );  // DBC manual brightness
   lcd_writeDataShort( 0x0000 );  // DBC minimum brightness
   lcd_writeDataShort( 0x0000 );  // brightness transition prescaler
 
+  // DBC off
+  lcd_writeCommand( 0x00d0 );
+  lcd_writeDataShort( 0x0000 );
+
+  // TE on
   lcd_writeCommand( 0x0035 );  // set tear effect output enable
   lcd_writeDataShort( 0x0000 );
+
+  lcd_writeCommand( 0x0029 );  //display on
 }
 
 void lcd_setPosition( unsigned int xs, unsigned int xe, unsigned int ys, unsigned int ye )

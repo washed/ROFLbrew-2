@@ -31,6 +31,7 @@ osThreadId createTaskDisplayBacklightUpdate();
 #define displayUpdateStackSize 0x2000
 uint32_t displayUpdateTaskBuffer[ displayUpdateStackSize ];
 osStaticThreadDef_t displayUpdateControlBlock;
+osThreadId displayUpdateTaskHandle;
 
 #define displayBacklightUpdateStackSize 0x1000
 #define BACKLIGHT_Q_ITEMS 10
@@ -51,14 +52,14 @@ extern UG_WINDOW window_1;
 
 void vTaskDisplayUpdate( void* pvParameters )
 {
-	  gui_init_mainwindow();
-	  UG_WindowShow( &window_1 );
+  gui_init_mainwindow();
+  UG_WindowShow( &window_1 );
 
   uint32_t PreviousWakeTime = osKernelSysTick();
   for ( ;; )
   {
     handleDisplayUpdate();
-    osDelayUntil( &PreviousWakeTime, 20 );
+    // osDelayUntil( &PreviousWakeTime, 10 );
   }
 
   // We should never get here
@@ -72,14 +73,14 @@ osThreadId createTaskDisplayUpdate()
   gui_init();
 
   // Create the main display update thread
-  osThreadStaticDef( displayUpdate, vTaskDisplayUpdate, osPriorityAboveNormal, 0, displayUpdateStackSize,
+  osThreadStaticDef( displayUpdate, vTaskDisplayUpdate, osPriorityRealtime, 0, displayUpdateStackSize,
                      displayUpdateTaskBuffer, &displayUpdateControlBlock );
-  osThreadId id = osThreadCreate( osThread( displayUpdate ), NULL );
+  displayUpdateTaskHandle = osThreadCreate( osThread( displayUpdate ), NULL );
 
   // Create the display backlight update thread
   createTaskDisplayBacklightUpdate();
 
-  return id;
+  return displayUpdateTaskHandle;
 }
 
 static inline void update_backlight_step()
@@ -174,6 +175,13 @@ osThreadId createTaskDisplayBacklightUpdate()
   return id;
 }
 
+void display_notifyTEFromISR()
+{
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  vTaskNotifyGiveFromISR( displayUpdateTaskHandle, &xHigherPriorityTaskWoken );
+  portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
+}
+
 void handleDisplayUpdate()
 {
   if ( touchEvent.touch_count > 0 )
@@ -181,9 +189,17 @@ void handleDisplayUpdate()
   else
     UG_TouchUpdate( -1, -1, TOUCH_STATE_RELEASED );
 
-  gui_update();
-  //lcd_waitForVSync();
-  UG_Update();
+  //while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_RESET );
+  // while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_SET );
+
+  uint32_t dr_event_count = ulTaskNotifyTake( pdTRUE, 50 );
+  if ( dr_event_count != 0 )
+  {
+    vTaskSuspendAll();
+    gui_update();
+    UG_Update();
+    xTaskResumeAll();
+  }
 }
 
 void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curve_t curve )

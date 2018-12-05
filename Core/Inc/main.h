@@ -78,6 +78,7 @@
 #define LCD_nRST_GPIO_Port GPIOD
 #define LCD_TE_Pin LL_GPIO_PIN_6
 #define LCD_TE_GPIO_Port GPIOC
+#define LCD_TE_EXTI_IRQn EXTI9_5_IRQn
 #define LCD_UPDATE_Pin LL_GPIO_PIN_7
 #define LCD_UPDATE_GPIO_Port GPIOC
 #define MAX31865_CS_Pin LL_GPIO_PIN_15

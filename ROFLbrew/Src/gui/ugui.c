@@ -6629,7 +6629,6 @@ _UG_PutChar( char chr, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc, const UG_FO
     {
       uint32_t total_pixels, current_pixel = 0;
       uint16_t character_array[1696];
-      HAL_GPIO_WritePin( LCD_UPDATE_GPIO_Port, LCD_UPDATE_Pin, GPIO_PIN_SET );
       if (font->font_type == FONT_TYPE_1BPP)
         {
           // TODO: Optimise here!
@@ -6704,7 +6703,6 @@ _UG_PutChar( char chr, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc, const UG_FO
            }
            */
         }
-      HAL_GPIO_WritePin( LCD_UPDATE_GPIO_Port, LCD_UPDATE_Pin, GPIO_PIN_RESET );
     }
   /* Is hardware acceleration available? */
   else if (gui->driver[DRIVER_FILL_AREA].state & DRIVER_ENABLED)

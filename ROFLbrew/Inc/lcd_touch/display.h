@@ -52,6 +52,7 @@ extern "C"
   } fade_def_t;
 
   osThreadId createTaskDisplayUpdate();
+  void display_notifyTEFromISR();
   void handleDisplayUpdate();
 
   void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curve_t curve );
