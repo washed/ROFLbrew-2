@@ -129,10 +129,12 @@ static void handleStove( STOVE* stove_handle )
       {
         stovePowerButtonPress( stove_handle );
         switchStovePowerMode( stove_handle );
+        stove_handle->current_powerstep = STOVE_STARTING_POWERSTEP;
       }
       else if ( stove_handle->requested_powerstep == 0 && stove_handle->current_powerstep > 0 )
       {
         stovePowerButtonPress( stove_handle );
+        stove_handle->current_powerstep = 0;
       }
       else if ( stove_handle->current_powerstep > stove_handle->requested_powerstep )
       {
@@ -175,7 +177,6 @@ static void switchStovePowerMode( STOVE* stove_handle )
                      stove_handle->gpio_pin[ STOVE_POWERMODE_PIN_INDEX ], GPIO_PIN_RESET );
   osDelay( STOVE_BUTTON_NOPRESS_TIME );
 
-  stove_handle->current_powerstep = STOVE_STARTING_POWERSTEP;
   stove_handle->state = STOVE_STATE_READY;
 }
 
