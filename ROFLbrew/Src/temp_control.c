@@ -88,6 +88,10 @@ void vTaskTempControl( void* pvParameters )
 {
   initTemperatureControl( &temp_control0 );
 
+  // TODO: Default rast for testing, Remove!
+  setRast( &temp_control0, 0, 100000, 600, RAST_TYPE_HEAT );
+  modifyRunMode( &temp_control0, RUN_MODE_RUN );
+
   uint32_t PreviousWakeTime = osKernelSysTick();
   for ( ;; )
   {
