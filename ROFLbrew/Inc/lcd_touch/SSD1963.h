@@ -20,7 +20,6 @@ extern "C"
   void pset( uint16_t x, uint16_t y, uint16_t col );
 
   void lcd_setPosition( unsigned int xs, unsigned int xe, unsigned int ys, unsigned int ye );
-  void lcd_waitForVSync();
   // void lcd_clear( unsigned int i );
   // void lcd_showBMP( unsigned char p[] );
   // uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color );
