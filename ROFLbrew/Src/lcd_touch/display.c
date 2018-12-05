@@ -193,9 +193,6 @@ void handleDisplayUpdate()
   else
     UG_TouchUpdate( -1, -1, TOUCH_STATE_RELEASED );
 
-  //while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_RESET );
-  // while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_SET );
-
   uint32_t dr_event_count = ulTaskNotifyTake( pdTRUE, 50 );
   if ( dr_event_count != 0 )
   {
@@ -232,14 +229,6 @@ uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint1
 
   // Invalidate cache for the "color" parameter, because DMA will bypass the cache and may otherwise write invalid data
   SCB_CleanInvalidateDCache_by_Addr( (uint32_t*)&color, sizeof( color ) );
-
-#ifdef LCD_WAIT_FOR_VSYNC
-  // Wait for vertical sync
-  while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_RESET )
-    ;
-  while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_SET )
-    ;
-#endif
 
   // Set write area
   lcd_setPosition( x1, x2, y1, y2 );
@@ -284,14 +273,6 @@ uint8_t lcd_fillArea( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16
 
   // Invalidate cache for the "color" parameter, because DMA will bypass the cache and may otherwise write invalid data
   SCB_CleanInvalidateDCache_by_Addr((uint32_t*)&color, sizeof(color));
-
-#ifdef WAIT_FOR_VSYNC
-  // Wait for vertical sync
-  while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_RESET )
-    ;
-  while ( HAL_GPIO_ReadPin( LCD_TE_GPIO_Port, LCD_TE_Pin ) == GPIO_PIN_SET )
-    ;
-#endif
 
   // Set write area
   lcd_setPosition( x1, x2, y1, y2 );

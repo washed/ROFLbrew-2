@@ -6665,7 +6665,6 @@ _UG_PutChar( char chr, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc, const UG_FO
 
           while (HAL_DMA_GetState( UGUI_HAL_DMA_INSTANCE) != HAL_DMA_STATE_READY)
             ;
-          //lcd_waitForVSync();
 
           // Invalidate cache for the "character_array", because DMA will bypass the cache and may otherwise write invalid data
           SCB_CleanInvalidateDCache_by_Addr((uint32_t*)&character_array[0], sizeof(character_array) );

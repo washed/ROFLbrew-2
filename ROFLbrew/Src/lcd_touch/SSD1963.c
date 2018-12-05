@@ -157,7 +157,7 @@ void lcd_clear( unsigned int i )
   // Wait for DMA ready
   while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
     ;
-  lcd_waitForVSync();
+
   for ( uint32_t j = 0; j < 6; j++ )
   {
     // Start new DMA Transfer
