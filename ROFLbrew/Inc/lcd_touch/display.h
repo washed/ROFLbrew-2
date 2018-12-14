@@ -11,6 +11,7 @@
 // ST HAL top include
 #include "stm32f7xx_hal.h"
 #include "cmsis_os.h"
+#include "lvgl.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -19,6 +20,7 @@ extern "C"
 
 #define USE_LCD_DMA
 #define LCD_HAL_DMA_INSTANCE &hdma_memtomem_dma2_stream0
+#define INCR_HAL_DMA_INSTANCE &hdma_memtomem_dma2_stream1
 
 #define LCD_MAX_BRIGHTNESS 1000
 #define LCD_MIN_BRIGHTNESS 0
@@ -57,6 +59,7 @@ extern "C"
 
   void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curve_t curve );
   uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color );
+  void disp_flush(int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_color_t* color_p);
 
   extern uint32_t duration;
 

@@ -7,7 +7,6 @@
 
 #include "stm32f7xx_hal.h"
 #include "tim.h"
-#include "gui/ugui.h"
 #include "gui/roflbrew_gui.h"
 #include "lcd_touch/touch.h"
 #include "lcd_touch/display.h"
@@ -20,6 +19,8 @@
 #ifdef USE_LCD_DMA
 #include "dma.h"
 #endif
+
+#include "lvgl.h"
 
 #if defined( __ENABLE_SYSVIEW )
 #include "SEGGER_SYSVIEW.h"
@@ -50,18 +51,20 @@ uint32_t duration = 0;
 fade_def_t lcd_backlight_fade;
 
 // TODO: Improve this
-extern UG_WINDOW window_1;
 
 void vTaskDisplayUpdate( void* pvParameters )
 {
-  gui_init_mainwindow();
-  UG_WindowShow( &window_1 );
+  roflbrew_gui_init();
+
+  // lcd_fillFrame( 0, 0, 799, 479, C_BLACK );
 
   uint32_t PreviousWakeTime = osKernelSysTick();
   for ( ;; )
   {
     handleDisplayUpdate();
-    // osDelayUntil( &PreviousWakeTime, 10 );
+
+    // TODO: Should we handle this without an os delay?
+    osDelayUntil( &PreviousWakeTime, 5 );
   }
 
   // We should never get here
@@ -188,11 +191,12 @@ void handleDisplayUpdate()
 {
   static uint32_t last_tick = 0;
 
-  if ( touchEvent.touch_count > 0 )
-    UG_TouchUpdate( touchEvent.x1, touchEvent.y1, TOUCH_STATE_PRESSED );
-  else
-    UG_TouchUpdate( -1, -1, TOUCH_STATE_RELEASED );
+  // TODO: Use mutex around this and any other calls of lv functions!
+  vTaskSuspendAll();
+  lv_task_handler();
+  xTaskResumeAll();
 
+  /*
   uint32_t dr_event_count = ulTaskNotifyTake( pdTRUE, 50 );
   if ( dr_event_count != 0 )
   {
@@ -200,9 +204,10 @@ void handleDisplayUpdate()
     last_tick = osKernelSysTick();
     vTaskSuspendAll();
     gui_update();
-    UG_Update();
+   // UG_Update();
     xTaskResumeAll();
   }
+  */
 }
 
 void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curve_t curve )
@@ -218,6 +223,50 @@ void setDisplayBacklightFade( uint32_t brightness, uint32_t fade_time, fade_curv
     // TODO: Make it possible to call this from an interrupt context
     xQueueSend( backlightQueueHandle, &fade_def, 0 );
   }
+}
+
+void disp_flush( int32_t x1, int32_t y1, int32_t x2, int32_t y2, const lv_color_t* color_p )
+{
+  uint16_t dx = x2 - x1 + 1;
+  uint16_t dy = y2 - y1 + 1;
+  uint32_t total_pixel_count = dx * dy;
+  uint16_t tx_pixel_count;
+
+  // Invalidate cache for the "color" parameter, because DMA will bypass the cache and may otherwise write invalid data
+  // SCB_CleanInvalidateDCache_by_Addr( (uint32_t*)&color_p, sizeof( color_p ) );
+  // SCB_CleanInvalidateDCache_by_Addr( (uint32_t*)color_p, sizeof( *color_p ) * total_pixel_count );
+  SCB_CleanInvalidateDCache();
+  SCB_InvalidateICache();  // TODO: Investigate if this helps with ICache enabled. If not, it's probably something in lvgl
+
+  // Set write area
+  lcd_setPosition( x1, x2, y1, y2 );
+
+  // TODO: We shouldn't wait like this in a task!
+  while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
+    ;
+
+  while ( total_pixel_count )
+  {
+    if ( total_pixel_count > PIXEL_COUNT_PER_DMA )
+      tx_pixel_count = PIXEL_COUNT_PER_DMA;
+    else
+      tx_pixel_count = total_pixel_count;
+
+    // Start new DMA Transfer
+    // TODO: We shouldn't wait like this in a task!
+    while ( HAL_OK !=
+            HAL_DMA_Start_IT( INCR_HAL_DMA_INSTANCE, (uint32_t)&color_p->full, (uint32_t)0x60020000, tx_pixel_count ) )
+      ;
+
+    // Wait for DMA ready
+    // TODO: We shouldn't wait like this in a task!
+    while ( HAL_DMA_GetState( LCD_HAL_DMA_INSTANCE ) != HAL_DMA_STATE_READY )
+      ;
+    total_pixel_count -= tx_pixel_count;
+  }
+
+  // Inform the graphics library that we have flushed the buffer to the screen
+  lv_flush_ready();
 }
 
 uint8_t lcd_fillFrame( uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color )

@@ -12,7 +12,8 @@
         "./Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/include/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
-        "./ROFLbrew/Inc/*"
+        "./ROFLbrew/Inc/*",
+        "./lvgl/*"
       ],
       "defines": [
         "__weak=__attribute__((__weak__))",
@@ -38,7 +39,8 @@
         "./Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM7/r0p1/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/include/*",
         "./Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS",
-        "./ROFLbrew/Inc/*"
+        "./ROFLbrew/Inc/*",
+        "./lvgl/*"
       ],
       "defines": [
         "__weak=__attribute__((__weak__))",

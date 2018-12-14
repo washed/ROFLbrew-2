@@ -8,7 +8,9 @@
 #ifndef TOUCH_H_
 #define TOUCH_H_
 
-#define TOUCH_I2C_INSTANCE (&hi2c1)
+#include "lvgl.h"
+
+#define TOUCH_I2C_INSTANCE ( &hi2c1 )
 
 #define WRITE_ADD 0x80
 #define READ_ADD 0x81
@@ -39,6 +41,7 @@ typedef struct fw_data
 
 extern TouchEvent_TypeDef touchEvent;
 
+uint8_t ex_tp_read( lv_indev_data_t* data );
 uint8_t touch_readTouchData();
 void touch_init();
 

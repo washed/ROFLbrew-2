@@ -9,7 +9,10 @@
 		"files.associations": {
 			"stm32f7xx_hal.h": "c",
 			"display.h": "c",
-			"ssd1963.h": "c"
+			"ssd1963.h": "c",
+			"roflbrew_gui.h": "c",
+			"window_mainmenu.h": "c",
+			"demo.h": "c"
 		}
 	}
 }

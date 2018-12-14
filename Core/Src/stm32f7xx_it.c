@@ -164,7 +164,7 @@ void SysTick_Handler(void)
   /* USER CODE END SysTick_IRQn 0 */
   osSystickHandler();
   /* USER CODE BEGIN SysTick_IRQn 1 */
-
+  lv_tick_inc(1);
   /* USER CODE END SysTick_IRQn 1 */
 }
 

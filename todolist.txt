@@ -16,3 +16,5 @@ Instrumentation:
 General:
   ? Add 100 nF to reset line (maybe a pull-up, as well)
   ? LCD init is still not stable
+  ? Check about heap size requirements for lvgl
+  ? Use mutex for lv_task_handler

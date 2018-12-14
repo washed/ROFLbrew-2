@@ -8,8 +8,6 @@
 #include "MAX31865.h"
 #include <math.h>
 #include <string.h>
-#include "gui/ugui.h"
-#include "lcd_touch/touch.h"
 #include "stm32f7xx_hal.h"
 #include "temp_control.h"
 #include "FreeRTOS.h"

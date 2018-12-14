@@ -9,6 +9,7 @@
 #include "i2c.h"
 #include "lcd_touch/touch.h"
 #include "lcd_touch/touch_GSL680_fw.h"
+#include "lvgl.h"
 
 #if defined( __ENABLE_SYSVIEW )
 #include "SEGGER_SYSVIEW.h"
@@ -24,6 +25,33 @@ static void touch_chipClearRegs();
 static void touch_chipReset();
 static void touch_loadFirmware();
 static void touch_chipStartup();
+
+/* Read the touchpad and store it in 'data'
+ * Return false if no more data read; true for ready again */
+uint8_t ex_tp_read( lv_indev_data_t* data )
+{
+  // TODO: Handle multitouch correctly
+
+  static uint16_t last_x;
+  static uint16_t last_y;
+
+  if ( touchEvent.touch_count > 0 )
+  {
+    data->state = LV_INDEV_STATE_PR;
+    data->point.x = touchEvent.x1;
+    data->point.y = touchEvent.y1;
+    last_x = data->point.x;
+    last_y = data->point.y;
+  }
+  else
+  {
+    data->state = LV_INDEV_STATE_REL;
+    data->point.x = last_x;
+    data->point.y = last_y;
+  }
+
+  return 0; /*false: no more data to read because we are no buffering*/
+}
 
 uint8_t touch_readTouchData()
 {
